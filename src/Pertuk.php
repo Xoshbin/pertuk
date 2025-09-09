@@ -31,14 +31,14 @@ class Pertuk
 
         return collect($this->css)->reduce(function ($carry, $css) {
             if ($css instanceof Htmlable) {
-                return $carry . Str::finish($css->toHtml(), PHP_EOL);
+                return $carry.Str::finish($css->toHtml(), PHP_EOL);
             }
 
             if (($contents = @file_get_contents($css)) === false) {
                 throw new RuntimeException("Unable to load Pertuk CSS path [$css].");
             }
 
-            return $carry . "<style>{$contents}</style>" . PHP_EOL;
+            return $carry."<style>{$contents}</style>".PHP_EOL;
         }, '');
     }
 
@@ -51,7 +51,6 @@ class Pertuk
             throw new RuntimeException('Unable to load the Pertuk JavaScript.');
         }
 
-        return "<script>{$js}</script>" . PHP_EOL;
+        return "<script>{$js}</script>".PHP_EOL;
     }
 }
-

@@ -4,8 +4,8 @@ namespace Xoshbin\Pertuk;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Xoshbin\Pertuk\Services\DocumentationService;
 use Xoshbin\Pertuk\Pertuk as PertukCore;
+use Xoshbin\Pertuk\Services\DocumentationService;
 
 class PertukServiceProvider extends PackageServiceProvider
 {

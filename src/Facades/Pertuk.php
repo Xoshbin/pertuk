@@ -20,4 +20,3 @@ class Pertuk extends Facade
         return \Xoshbin\Pertuk\Pertuk::class;
     }
 }
-

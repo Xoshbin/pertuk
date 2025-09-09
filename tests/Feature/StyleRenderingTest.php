@@ -30,13 +30,13 @@ it('generates table of contents from headings', function () {
     expect($doc['toc'][0])->toEqual([
         'level' => 2,
         'id' => 'section-1',
-        'text' => 'Section 1'
+        'text' => 'Section 1',
     ]);
 
     expect($doc['toc'][1])->toEqual([
         'level' => 3,
         'id' => 'subsection-11',
-        'text' => 'Subsection 1.1'
+        'text' => 'Subsection 1.1',
     ]);
 
     // Verify IDs are injected into HTML
@@ -104,7 +104,7 @@ it('processes external links with proper attributes', function () {
     // Internal links should not have these attributes
     $internalLinkPattern = '/<a[^>]*href="\.\/internal-doc"[^>]*>/';
     preg_match($internalLinkPattern, $doc['html'], $matches);
-    if (!empty($matches)) {
+    if (! empty($matches)) {
         expect($matches[0])->not->toContain('target="_blank"');
         expect($matches[0])->not->toContain('rel="noopener noreferrer"');
     }
@@ -120,7 +120,7 @@ it('generates proper breadcrumbs structure', function () {
     expect($doc['breadcrumbs'])->toHaveCount(1);
     expect($doc['breadcrumbs'][0])->toEqual([
         'title' => 'Documentation',
-        'slug' => null
+        'slug' => null,
     ]);
 });
 

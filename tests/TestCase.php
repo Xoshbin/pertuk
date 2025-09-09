@@ -16,7 +16,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn(string $modelName) => 'Xoshbin\\Pertuk\\Database\\Factories\\' . class_basename($modelName) . 'Factory'
+            fn (string $modelName) => 'Xoshbin\\Pertuk\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
 
         // Create a temporary docs directory for testing
@@ -43,7 +43,7 @@ class TestCase extends Orchestra
         config()->set('database.default', 'testing');
 
         // Initialize test docs path
-        $this->testDocsPath = sys_get_temp_dir() . '/pertuk-test-docs-' . uniqid();
+        $this->testDocsPath = sys_get_temp_dir().'/pertuk-test-docs-'.uniqid();
 
         // Set up Pertuk configuration for testing
         config()->set('pertuk.root', $this->testDocsPath);
@@ -71,7 +71,7 @@ class TestCase extends Orchestra
     {
         $docsPath = $this->getTestDocsPath();
 
-        if (!File::exists($docsPath)) {
+        if (! File::exists($docsPath)) {
             File::makeDirectory($docsPath, 0755, true);
         }
     }
@@ -88,13 +88,13 @@ class TestCase extends Orchestra
     protected function createTestMarkdownFile(string $filename, string $content, string $subdirectory = ''): string
     {
         $docsPath = $this->getTestDocsPath();
-        $fullPath = $subdirectory ? $docsPath . '/' . $subdirectory : $docsPath;
+        $fullPath = $subdirectory ? $docsPath.'/'.$subdirectory : $docsPath;
 
-        if (!File::exists($fullPath)) {
+        if (! File::exists($fullPath)) {
             File::makeDirectory($fullPath, 0755, true);
         }
 
-        $filePath = $fullPath . '/' . $filename;
+        $filePath = $fullPath.'/'.$filename;
         File::put($filePath, $content);
 
         return $filePath;

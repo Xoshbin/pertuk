@@ -8,7 +8,7 @@ use Xoshbin\Pertuk\Services\DocumentationService;
 it('throws FileNotFoundException for non-existent documents', function () {
     $service = DocumentationService::make();
 
-    expect(fn() => $service->get('non-existent-doc'))
+    expect(fn () => $service->get('non-existent-doc'))
         ->toThrow(FileNotFoundException::class, 'Doc not found for slug: non-existent-doc');
 });
 
@@ -80,9 +80,9 @@ it('handles files with malformed markdown', function () {
 it('handles very large markdown files', function () {
     // Create a large markdown file
     $content = "---\ntitle: Large Document\n---\n\n# Large Document\n\n";
-    $content .= str_repeat("This is a paragraph with some content. ", 1000);
+    $content .= str_repeat('This is a paragraph with some content. ', 1000);
     $content .= "\n\n## Section\n\n";
-    $content .= str_repeat("More content here. ", 1000);
+    $content .= str_repeat('More content here. ', 1000);
 
     $this->createTestMarkdownFile('large.md', $content);
 
@@ -159,7 +159,7 @@ it('handles file reading errors gracefully', function () {
         $service = DocumentationService::make();
 
         // Should handle the error gracefully
-        expect(fn() => $service->get('test-permissions'))
+        expect(fn () => $service->get('test-permissions'))
             ->toThrow(\Exception::class);
 
         // Restore permissions for cleanup

@@ -134,6 +134,7 @@ class DocumentationService
         // Generate fresh content and cache it
         $result = $this->generateDocumentData($path, $actualSlug, $mtime);
         Cache::put($cacheKey, $result, $this->ttl);
+
         return $result;
     }
 
@@ -151,50 +152,50 @@ class DocumentationService
      */
     private function generateDocumentData(string $path, string $slug, int $mtime): array
     {
-            $raw = File::get($path);
-            try {
-                $front = YamlFrontMatter::parse($raw);
-                $content = $front->body();
-                $meta = $front->matter();
-            } catch (\Throwable $e) {
-                Log::warning('Failed to parse front matter', ['path' => $path, 'e' => $e->getMessage()]);
-                $content = $raw;
-                $meta = [];
-            }
+        $raw = File::get($path);
+        try {
+            $front = YamlFrontMatter::parse($raw);
+            $content = $front->body();
+            $meta = $front->matter();
+        } catch (\Throwable $e) {
+            Log::warning('Failed to parse front matter', ['path' => $path, 'e' => $e->getMessage()]);
+            $content = $raw;
+            $meta = [];
+        }
 
-            $converter = $this->markdownConverter();
-            $html = (string) $converter->convert($content);
+        $converter = $this->markdownConverter();
+        $html = (string) $converter->convert($content);
 
-            // Inject heading IDs and build TOC from h2/h3
-            [$htmlWithIds, $toc] = $this->injectHeadingIdsAndToc($html);
+        // Inject heading IDs and build TOC from h2/h3
+        [$htmlWithIds, $toc] = $this->injectHeadingIdsAndToc($html);
 
-            // Enhance links and images
-            $htmlWithLinks = $this->postProcessLinksAndImages($htmlWithIds, $slug);
+        // Enhance links and images
+        $htmlWithLinks = $this->postProcessLinksAndImages($htmlWithIds, $slug);
 
-            $title = $meta['title'] ?? $this->extractH1($htmlWithLinks) ?? $this->inferTitle($path);
+        $title = $meta['title'] ?? $this->extractH1($htmlWithLinks) ?? $this->inferTitle($path);
 
-            // Remove first H1 from the content to avoid duplicated page title in the view
-            $htmlWithLinks = preg_replace('/<h1[^>]*>.*?<\/h1>/is', '', $htmlWithLinks, 1) ?? $htmlWithLinks;
+        // Remove first H1 from the content to avoid duplicated page title in the view
+        $htmlWithLinks = preg_replace('/<h1[^>]*>.*?<\/h1>/is', '', $htmlWithLinks, 1) ?? $htmlWithLinks;
 
-            $breadcrumbs = [
-                ['title' => __('Documentation'), 'slug' => null],
-            ];
+        $breadcrumbs = [
+            ['title' => __('Documentation'), 'slug' => null],
+        ];
 
-            $etag = 'W/"'.substr(sha1($path.'|'.$mtime.'|'.strlen($htmlWithLinks)), 0, 27).'"';
+        $etag = 'W/"'.substr(sha1($path.'|'.$mtime.'|'.strlen($htmlWithLinks)), 0, 27).'"';
 
-            // Language alternates
-            [$alternates, $currentLocale] = $this->buildAlternates($slug);
+        // Language alternates
+        [$alternates, $currentLocale] = $this->buildAlternates($slug);
 
-            return [
-                'title' => $title,
-                'html' => $htmlWithLinks,
-                'toc' => $toc,
-                'breadcrumbs' => $breadcrumbs,
-                'mtime' => $mtime,
-                'etag' => $etag,
-                'alternates' => $alternates,
-                'current_locale' => $currentLocale,
-            ];
+        return [
+            'title' => $title,
+            'html' => $htmlWithLinks,
+            'toc' => $toc,
+            'breadcrumbs' => $breadcrumbs,
+            'mtime' => $mtime,
+            'etag' => $etag,
+            'alternates' => $alternates,
+            'current_locale' => $currentLocale,
+        ];
     }
 
     /** Build a lightweight search index (title + headings + plain text excerpt). */
@@ -276,7 +277,7 @@ class DocumentationService
         $nodes = $xpath->query('//h2 | //h3');
         if ($nodes) {
             foreach ($nodes as $node) {
-                if (!($node instanceof \DOMElement)) {
+                if (! ($node instanceof \DOMElement)) {
                     continue;
                 }
 

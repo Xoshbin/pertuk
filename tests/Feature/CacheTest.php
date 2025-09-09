@@ -27,9 +27,9 @@ it('caches parsed document content', function () {
     expect($time2)->toBeLessThan($time1); // Cache should be faster
 
     // Verify cache key exists
-    $path = $this->getTestDocsPath() . '/test-cache.md';
+    $path = $this->getTestDocsPath().'/test-cache.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:' . md5($path . ':' . $mtime);
+    $cacheKey = 'pertuk:docs:'.md5($path.':'.$mtime);
 
     expect(Cache::has($cacheKey))->toBeTrue();
 });
@@ -73,9 +73,9 @@ it('respects cache TTL configuration', function () {
     $doc1 = $service->get('test-ttl');
 
     // Verify it's cached
-    $path = $this->getTestDocsPath() . '/test-ttl.md';
+    $path = $this->getTestDocsPath().'/test-ttl.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:' . md5($path . ':' . $mtime);
+    $cacheKey = 'pertuk:docs:'.md5($path.':'.$mtime);
     expect(Cache::has($cacheKey))->toBeTrue();
 
     // Wait for TTL to expire
@@ -97,13 +97,13 @@ it('generates unique cache keys for different files', function () {
     $service->get('doc2');
 
     // Verify different cache keys exist
-    $path1 = $this->getTestDocsPath() . '/doc1.md';
-    $path2 = $this->getTestDocsPath() . '/doc2.md';
+    $path1 = $this->getTestDocsPath().'/doc1.md';
+    $path2 = $this->getTestDocsPath().'/doc2.md';
     $mtime1 = File::lastModified($path1);
     $mtime2 = File::lastModified($path2);
 
-    $cacheKey1 = 'pertuk:docs:' . md5($path1 . ':' . $mtime1);
-    $cacheKey2 = 'pertuk:docs:' . md5($path2 . ':' . $mtime2);
+    $cacheKey1 = 'pertuk:docs:'.md5($path1.':'.$mtime1);
+    $cacheKey2 = 'pertuk:docs:'.md5($path2.':'.$mtime2);
 
     expect($cacheKey1)->not->toBe($cacheKey2);
     expect(Cache::has($cacheKey1))->toBeTrue();
@@ -144,9 +144,9 @@ it('handles cache corruption gracefully', function () {
     $doc1 = $service->get('cache-corruption');
 
     // Manually corrupt the cache
-    $path = $this->getTestDocsPath() . '/cache-corruption.md';
+    $path = $this->getTestDocsPath().'/cache-corruption.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:' . md5($path . ':' . $mtime);
+    $cacheKey = 'pertuk:docs:'.md5($path.':'.$mtime);
 
     Cache::put($cacheKey, 'corrupted-data', 60);
 

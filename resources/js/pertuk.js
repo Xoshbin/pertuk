@@ -55,12 +55,34 @@ class DocsManager {
 
         // Check for saved theme preference or default to 'light'
         const savedTheme = localStorage.getItem("theme") || "light";
-        html.classList.toggle("dark", savedTheme === "dark");
+
+        // Apply theme immediately
+        this.applyTheme(savedTheme);
 
         themeToggle.addEventListener("click", () => {
-            const isDark = html.classList.toggle("dark");
-            localStorage.setItem("theme", isDark ? "dark" : "light");
+            const currentTheme = localStorage.getItem("theme") || "light";
+            const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+            // Apply the new theme
+            this.applyTheme(newTheme);
+            localStorage.setItem("theme", newTheme);
         });
+    }
+
+    /**
+     * Apply theme to document
+     */
+    applyTheme(theme) {
+        const html = document.documentElement;
+
+        if (theme === "dark") {
+            html.classList.add("dark");
+        } else {
+            html.classList.remove("dark");
+        }
+
+        // Force a repaint to ensure styles are applied
+        html.offsetHeight;
     }
 
     /**
@@ -398,41 +420,45 @@ class DocsManager {
         const globalLangSelect = document.getElementById("global-lang-select");
         if (!globalLangSelect) return;
 
+        // Set the current locale in the selector
+        this.setCurrentLocaleInSelector(globalLangSelect);
+
         globalLangSelect.addEventListener("change", async (e) => {
             const selectedLocale = e.target.value;
 
             try {
-                // Send AJAX request to set locale
-                const response = await fetch(`/locale/${selectedLocale}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN":
-                            document
-                                .querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content") || "",
-                        "X-Requested-With": "XMLHttpRequest",
-                    },
-                });
+                // Get CSRF token from meta tag or XSRF cookie
+                let csrfToken = document
+                    .querySelector('meta[name="csrf-token"]')
+                    ?.getAttribute("content");
 
-                if (response.ok) {
-                    const data = await response.json();
+                // If meta tag is empty, try to get from XSRF-TOKEN cookie
+                if (!csrfToken) {
+                    const xsrfCookie = document.cookie
+                        .split(";")
+                        .find((cookie) =>
+                            cookie.trim().startsWith("XSRF-TOKEN=")
+                        );
 
-                    // If a redirect URL is provided, navigate to it
-                    if (data.redirect_url) {
-                        window.location.href = data.redirect_url;
-                    } else {
-                        // Otherwise, just reload the page
-                        window.location.reload();
+                    if (xsrfCookie) {
+                        csrfToken = decodeURIComponent(
+                            xsrfCookie.split("=")[1]
+                        );
+                        // Parse the Laravel encrypted cookie value
+                        try {
+                            const parsed = JSON.parse(atob(csrfToken));
+                            csrfToken = parsed.value;
+                        } catch (e) {
+                            console.warn("Could not parse XSRF token:", e);
+                        }
                     }
-                } else {
-                    console.error("Failed to set locale");
-                    // Reset the select to the previous value
-                    e.target.value = document.documentElement.lang.replace(
-                        "-",
-                        "_"
-                    );
                 }
+
+                // Use GET request to avoid CSRF issues
+                // This will redirect to the locale route and then back to the docs
+                window.location.href = `/locale/${selectedLocale}?redirect=${encodeURIComponent(
+                    window.location.pathname
+                )}`;
             } catch (error) {
                 console.error("Error setting locale:", error);
                 // Reset the select to the previous value
@@ -442,6 +468,21 @@ class DocsManager {
                 );
             }
         });
+    }
+
+    /**
+     * Set the current locale in the language selector based on HTML lang attribute
+     */
+    setCurrentLocaleInSelector(selectElement) {
+        const currentLang = document.documentElement.lang || "en";
+
+        // Convert language codes if needed (e.g., 'en-US' to 'en')
+        const locale = currentLang.split("-")[0];
+
+        // Set the select value to match current locale
+        if (selectElement.querySelector(`option[value="${locale}"]`)) {
+            selectElement.value = locale;
+        }
     }
 }
 

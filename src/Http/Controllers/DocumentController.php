@@ -5,12 +5,18 @@ namespace Xoshbin\Pertuk\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Session;
 use Xoshbin\Pertuk\Services\DocumentationService;
 
 class DocumentController extends Controller
 {
     public function index(): \Illuminate\Contracts\View\View
     {
+        // Ensure session is started for CSRF token generation
+        if (!Session::isStarted()) {
+            Session::start();
+        }
+
         $docs = DocumentationService::make();
         $items = $docs->list();
 
@@ -19,6 +25,11 @@ class DocumentController extends Controller
 
     public function show(Request $request, string $slug): \Illuminate\Http\Response|\Illuminate\Contracts\View\View
     {
+        // Ensure session is started for CSRF token generation
+        if (!Session::isStarted()) {
+            Session::start();
+        }
+
         $docs = DocumentationService::make();
         $data = $docs->get($slug);
 

@@ -377,12 +377,12 @@ html {
 }
 
 [dir="rtl"] .sidebar {
-    border-left: 1px solid theme('colors.gray.200');
+    @apply border-l border-gray-200;
     border-right: none;
 }
 
 [dir="rtl"] .dark .sidebar {
-    border-left-color: theme('colors.gray.700');
+    @apply border-l-gray-700;
 }
 
 .rtl-logical-spacing {

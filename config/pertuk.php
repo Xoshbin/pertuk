@@ -26,5 +26,5 @@ return [
     'route_prefix' => 'docs',
 
     // Route middleware
-    'middleware' => [],
+    'middleware' => ['web'],
 ];

@@ -68,15 +68,20 @@ class DocumentationService
             $slug = Str::of($relPath)->replaceLast('.md', '')->replace(DIRECTORY_SEPARATOR, '/')->toString();
 
             // Determine the locale and base slug for this document
-            $docLocale = 'en'; // default
+            $supported = (array) config('pertuk.supported_locales', ['en']);
+            $default = config('pertuk.default_locale', 'en');
+            $docLocale = $default;
             $baseSlug = $slug;
 
-            if (Str::endsWith($slug, '.ar')) {
-                $docLocale = 'ar';
-                $baseSlug = Str::beforeLast($slug, '.ar');
-            } elseif (Str::endsWith($slug, '.ckb')) {
-                $docLocale = 'ckb';
-                $baseSlug = Str::beforeLast($slug, '.ckb');
+            foreach ($supported as $loc) {
+                if ($loc === $default) {
+                    continue;
+                }
+                if (Str::endsWith($slug, '.'.$loc)) {
+                    $docLocale = $loc;
+                    $baseSlug = Str::beforeLast($slug, '.'.$loc);
+                    break;
+                }
             }
 
             $parsed = $this->parseFrontMatter($file->getPathname());
@@ -399,7 +404,7 @@ class DocumentationService
         }
         $slug = trim($currentDir ? ($currentDir.'/'.$target) : $target, '/');
 
-        return url('/docs/'.$slug);
+        return url('/'.config('pertuk.route_prefix', 'docs').'/'.$slug);
     }
 
     /**
@@ -409,39 +414,36 @@ class DocumentationService
      */
     protected function buildAlternates(string $slug): array
     {
-        // Determine base slug (strip locale suffix like .ar or .ckb)
-        $currentLocale = 'en';
+        // Determine base slug and current locale dynamically based on configured locales
+        $supported = (array) config('pertuk.supported_locales', ['en']);
+        $default = config('pertuk.default_locale', 'en');
+        $currentLocale = $default;
         $baseSlug = $slug;
 
-        if (Str::endsWith($slug, '.ar')) {
-            $currentLocale = 'ar';
-            $baseSlug = Str::beforeLast($slug, '.ar');
-        } elseif (Str::endsWith($slug, '.ckb')) {
-            $currentLocale = 'ckb';
-            $baseSlug = Str::beforeLast($slug, '.ckb');
+        foreach ($supported as $loc) {
+            if ($loc === $default) {
+                continue;
+            }
+            if (Str::endsWith($slug, '.'.$loc)) {
+                $currentLocale = $loc;
+                $baseSlug = Str::beforeLast($slug, '.'.$loc);
+                break;
+            }
         }
 
-        $locales = [
-            'en' => 'English',
-            'ar' => 'العربية',
-            'ckb' => 'کوردی',
-        ];
-
-        $candidates = [
-            'en' => $baseSlug,
-            'ar' => $baseSlug.'.ar',
-            'ckb' => $baseSlug.'.ckb',
-        ];
+        $labels = (array) config('pertuk.locale_labels', []);
+        $prefix = config('pertuk.route_prefix', 'docs');
 
         $alternates = [];
-        foreach ($candidates as $locale => $candidateSlug) {
+        foreach ($supported as $loc) {
+            $candidateSlug = $loc === $default ? $baseSlug : $baseSlug.'.'.$loc;
             $path = $this->resolvePathFromSlug($candidateSlug);
             if ($path) {
                 $alternates[] = [
-                    'locale' => $locale,
-                    'label' => $locales[$locale],
-                    'url' => url('/docs/'.$candidateSlug),
-                    'active' => $locale === $currentLocale,
+                    'locale' => $loc,
+                    'label' => $labels[$loc] ?? strtoupper($loc),
+                    'url' => url('/'.$prefix.'/'.$candidateSlug),
+                    'active' => $loc === $currentLocale,
                 ];
             }
         }

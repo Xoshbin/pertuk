@@ -1,7 +1,7 @@
 @php
     /** @var array<int,array{level:int,id:string,text:string}> $toc */
     $locale = app()->getLocale();
-    $isRtl = in_array($locale, ['ar', 'ckb']);
+    $isRtl = in_array($locale, config('pertuk.rtl_locales', ['ar', 'ckb']));
 @endphp
 
 @if (count($toc) > 0)

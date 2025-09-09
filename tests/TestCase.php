@@ -58,6 +58,9 @@ class TestCase extends Orchestra
         config()->set('app.fallback_locale', 'en');
         config()->set('app.name', 'Test App');
 
+        // Application key for encryption (required by framework during tests)
+        config()->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
+
         // Set testing environment
         config()->set('app.env', 'testing');
     }

@@ -1,7 +1,7 @@
 @php
     /** @var string $html */
     $locale = $current_locale ?? app()->getLocale();
-    $isRtl = in_array($locale, ['ar', 'ckb']);
+    $isRtl = in_array($locale, config('pertuk.rtl_locales', ['ar', 'ckb']));
 @endphp
 
 <x-pertuk::pertuk-layout :title="$title" :current-locale="$current_locale">

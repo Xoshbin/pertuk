@@ -5,6 +5,7 @@ namespace Xoshbin\Pertuk;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Xoshbin\Pertuk\Services\DocumentationService;
+use Xoshbin\Pertuk\Pertuk as PertukCore;
 
 class PertukServiceProvider extends PackageServiceProvider
 {
@@ -24,6 +25,9 @@ class PertukServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
+        // Bind core services
+        $this->app->singleton(PertukCore::class);
+
         $this->app->bind(DocumentationService::class, function () {
             return DocumentationService::make();
         });

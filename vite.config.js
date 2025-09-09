@@ -1,11 +1,16 @@
-import { defineConfig } from "vite";
-import laravel from "laravel-vite-plugin";
+/** @type {import('vite').UserConfig} */
+import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ["resources/css/pertuk.css", "resources/js/pertuk.js"],
-            refresh: true,
-        }),
-    ],
-});
+export default {
+    plugins: [tailwindcss()],
+    build: {
+        assetsDir: "",
+        rollupOptions: {
+            input: ["resources/js/pertuk.js", "resources/css/pertuk.css"],
+            output: {
+                assetFileNames: "[name][extname]",
+                entryFileNames: "[name].js",
+            },
+        },
+    },
+};

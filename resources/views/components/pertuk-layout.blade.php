@@ -12,9 +12,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title . ' · ' . config('app.name') : __('Docs') . ' · ' . config('app.name') }}</title>
-    @unless (app()->environment('testing'))
-        @vite(['resources/css/app.css', 'resources/js/app.js', 'packages/xoshbin/pertuk/resources/js/pertuk.js'])
-    @endunless
+    {!! \Xoshbin\Pertuk\Facades\Pertuk::css() !!}
+    {!! \Xoshbin\Pertuk\Facades\Pertuk::js() !!}
 </head>
 
 <body class="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-200">

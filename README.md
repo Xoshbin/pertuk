@@ -20,19 +20,7 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 -   🧭 **Breadcrumbs**: Automatic breadcrumb navigation
 -   🏷️ **Front Matter Support**: YAML front matter for metadata
 
-## Installation
-
-You can install the package via composer:
-
-```bash
-composer require xoshbin/pertuk
-```
-
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --tag="pertuk-config"
-```
+## Configuration
 
 This is the contents of the published config file:
 
@@ -65,19 +53,25 @@ return [
 ];
 ```
 
-## Frontend Assets (Tailwind CSS v4)
+## Quick start
 
-This package uses Tailwind CSS classes in its views. To ensure the documentation pages are styled correctly, you must configure your main Laravel application's Vite build to scan the package's files.
-
-**1. Install Dependencies**
-
-In your main Laravel application, make sure you have Tailwind CSS and its Vite plugin installed:
+1. Install the package:
 
 ```bash
-npm install -D tailwindcss @tailwindcss/vite
+composer require xoshbin/pertuk
 ```
 
-Optionally, you can publish the views using:
+2. (Optional) Publish the config:
+
+```bash
+php artisan vendor:publish --tag="pertuk-config"
+```
+
+3. Create a `docs` directory and add a markdown file, e.g. `docs/getting-started.md`.
+
+4. Visit your docs at `/docs` (or `/{route_prefix}` if you changed `pertuk.route_prefix`).
+
+-   Optional: publish the views to customize the layout and markup:
 
 ```bash
 php artisan vendor:publish --tag="pertuk-views"
@@ -85,19 +79,15 @@ php artisan vendor:publish --tag="pertuk-views"
 
 ## Usage
 
-### Basic Setup
-
-1. Create a `docs` directory in your Laravel project root
-2. Add markdown files to the `docs` directory
-3. Access your documentation at `/docs`
-
 ### Document Structure
 
 ```
 docs/
 ├── getting-started.md
 ├── User Guide/
-│   ├── installation.md
+│   ├── installation.md         # default (en)
+│   ├── installation.ckb.md     # Kurdish
+│   ├── installation.ar.md      # Arabic
 │   └── configuration.md
 ├── Developer Guide/
 │   ├── api.md
@@ -126,25 +116,8 @@ Create language-specific versions by adding locale suffixes:
 ```
 docs/
 ├── getting-started.md       # English (default)
-├── getting-started.ar.md    # Arabic
-└── getting-started.ckb.md   # Kurdish
-```
-
-### API Usage
-
-```php
-use Xoshbin\Pertuk\Services\DocumentationService;
-
-$docs = DocumentationService::make();
-
-// List all documents
-$items = $docs->list();
-
-// Get a specific document
-$doc = $docs->get('getting-started');
-
-// Build search index
-$searchIndex = $docs->buildIndex();
+├── getting-started.ckb.md   # Kurdish
+└── getting-started.ar.md    # Arabic
 ```
 
 ## Testing

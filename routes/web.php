@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use Xoshbin\Pertuk\Http\Controllers\DocumentController;
+use Xoshbin\Pertuk\Http\Controllers\LocaleController;
+
+// Locale switching route (global, not prefixed) - supports both GET and POST
+Route::match(['GET', 'POST'], '/locale/{locale}', [LocaleController::class, 'setLocale'])
+    ->name('locale.set')
+    ->where('locale', 'en|ckb|ar');
 
 $routePrefix = config('pertuk.route_prefix', 'docs');
 $middleware = config('pertuk.middleware', []);

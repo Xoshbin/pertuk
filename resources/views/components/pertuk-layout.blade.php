@@ -2,7 +2,7 @@
 
 @php
     $locale = $currentLocale ?? app()->getLocale();
-    $isRtl = in_array($locale, ['ar', 'ckb']);
+    $isRtl = in_array($locale, config('pertuk.rtl_locales', ['ar', 'ckb']));
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" class="h-full">

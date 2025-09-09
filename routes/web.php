@@ -7,7 +7,7 @@ use Xoshbin\Pertuk\Http\Controllers\LocaleController;
 // Locale switching route (global, not prefixed) - supports both GET and POST
 Route::match(['GET', 'POST'], '/locale/{locale}', [LocaleController::class, 'setLocale'])
     ->name('locale.set')
-    ->where('locale', 'en|ckb|ar');
+    ->where('locale', implode('|', config('pertuk.supported_locales', ['en'])));
 
 $routePrefix = config('pertuk.route_prefix', 'docs');
 $middleware = config('pertuk.middleware', []);

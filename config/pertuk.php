@@ -27,4 +27,15 @@ return [
 
     // Route middleware
     'middleware' => ['web'],
+
+    // Localization settings
+    'supported_locales' => ['en', 'ckb', 'ar'],
+    'default_locale' => 'en',
+    'rtl_locales' => ['ar', 'ckb'],
+    'locale_labels' => [
+        'en' => 'English',
+        'ckb' => 'کوردی (سۆرانی)',
+        'ar' => 'العربية',
+    ],
+
 ];

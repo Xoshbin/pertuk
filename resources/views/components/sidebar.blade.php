@@ -8,7 +8,7 @@
     });
 
     $locale = app()->getLocale();
-    $isRtl = in_array($locale, ['ar', 'ckb']);
+    $isRtl = in_array($locale, config('pertuk.rtl_locales', ['ar', 'ckb']));
 @endphp
 
 <nav class="space-y-6">

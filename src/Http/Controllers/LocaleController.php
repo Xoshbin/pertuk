@@ -17,10 +17,10 @@ class LocaleController extends Controller
      */
     public function setLocale(Request $request, string $locale): Response|JsonResponse|RedirectResponse
     {
-        // Validate locale against supported locales
-        $supportedLocales = ['en', 'ckb', 'ar'];
+        // Validate locale against supported locales from config
+        $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
 
-        if (! in_array($locale, $supportedLocales)) {
+        if (! in_array($locale, $supportedLocales, true)) {
             return response('Invalid locale', 400);
         }
 
@@ -79,20 +79,25 @@ class LocaleController extends Controller
             return url($docsPrefix);
         }
 
-        // Determine base slug (strip existing locale suffix)
+        // Determine base slug by stripping any configured locale suffix except default
+        $supported = (array) config('pertuk.supported_locales', ['en']);
+        $default = config('pertuk.default_locale', 'en');
         $baseSlug = $slug;
-        if (str_ends_with($slug, '.ar')) {
-            $baseSlug = substr($slug, 0, -3);
-        } elseif (str_ends_with($slug, '.ckb')) {
-            $baseSlug = substr($slug, 0, -4);
+
+        foreach ($supported as $loc) {
+            if ($loc === $default) {
+                continue;
+            }
+            if (str_ends_with($slug, '.'.$loc)) {
+                $baseSlug = substr($slug, 0, -1 * (strlen($loc) + 1));
+                break;
+            }
         }
 
         // Build the new slug for the target locale
         $newSlug = $baseSlug;
-        if ($locale === 'ar') {
-            $newSlug .= '.ar';
-        } elseif ($locale === 'ckb') {
-            $newSlug .= '.ckb';
+        if ($locale !== $default) {
+            $newSlug .= '.'.$locale;
         }
 
         return url($docsPrefix.'/'.$newSlug);

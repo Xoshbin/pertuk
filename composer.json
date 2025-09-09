@@ -1,24 +1,29 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "xoshbin/pertuk",
+    "description": "A powerful Laravel documentation package with multi-language support, markdown processing, and beautiful UI",
     "keywords": [
-        ":vendor_name",
+        "xoshbin",
         "laravel",
-        ":package_slug"
+        "documentation",
+        "markdown",
+        "docs",
+        "multi-language"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/xoshbin/pertuk",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Xoshbin",
+            "email": "info@xoshbin.com",
             "role": "Developer"
         }
     ],
     "require": {
         "php": "^8.4",
         "spatie/laravel-package-tools": "^1.16",
-        "illuminate/contracts": "^11.0||^12.0"
+        "illuminate/contracts": "^11.0||^12.0",
+        "league/commonmark": "^2.0",
+        "spatie/yaml-front-matter": "^2.0"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
@@ -35,13 +40,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src/",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories/"
+            "Xoshbin\\Pertuk\\": "src/",
+            "Xoshbin\\Pertuk\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests/",
+            "Xoshbin\\Pertuk\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -63,11 +68,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
-            ],
-            "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
-            }
+                "Xoshbin\\Pertuk\\PertukServiceProvider"
+            ]
         }
     },
     "minimum-stability": "dev",

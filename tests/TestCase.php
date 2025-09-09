@@ -61,7 +61,6 @@ class TestCase extends Orchestra
         // Application key for encryption (required by framework during tests)
         config()->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
 
-
         // Set testing environment
         config()->set('app.env', 'testing');
     }

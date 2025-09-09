@@ -23,11 +23,11 @@ class DocsAction
 
         $routePrefix = config('pertuk.route_prefix', 'docs');
 
-        return Action::make($slug . '_docs')
+        return Action::make($slug.'_docs')
             ->label($label)
             ->icon('heroicon-o-question-mark-circle')
             ->color('gray')
-            ->url(route($routePrefix . '.show', ['slug' => $fullSlug]))
+            ->url(route($routePrefix.'.show', ['slug' => $fullSlug]))
             ->openUrlInNewTab();
     }
 }

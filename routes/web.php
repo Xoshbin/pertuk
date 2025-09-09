@@ -8,7 +8,7 @@ $middleware = config('pertuk.middleware', []);
 
 Route::prefix($routePrefix)
     ->middleware($middleware)
-    ->name($routePrefix . '.')
+    ->name($routePrefix.'.')
     ->group(function () {
         Route::get('/', [DocumentController::class, 'index'])->name('index');
 

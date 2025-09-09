@@ -20,8 +20,7 @@ class DocumentationService
         protected int $ttl,
         /** @var array<int,string> */
         protected array $exclude = [],
-    ) {
-    }
+    ) {}
 
     public static function make(): self
     {
@@ -35,6 +34,7 @@ class DocumentationService
     /**
      * List docs as a flat array with minimal metadata (for index/sidebar).
      * Prioritizes documents in the current application locale.
+     *
      * @return array<int, array{slug:string,title:string,order:int,path:string,mtime:int}>
      */
     public function list(): array
@@ -42,7 +42,7 @@ class DocumentationService
         $files = collect(File::allFiles($this->root))
             ->filter(fn ($file) => Str::endsWith($file->getFilename(), '.md'))
             ->reject(function ($file) {
-                $relPath = Str::after($file->getPathname(), rtrim($this->root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
+                $relPath = Str::after($file->getPathname(), rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
 
                 // Check if filename is in exclude list
                 if (in_array($file->getFilename(), $this->exclude, true)) {
@@ -64,7 +64,7 @@ class DocumentationService
         $seenBaseSlugs = [];
 
         foreach ($files as $file) {
-            $relPath = Str::after($file->getPathname(), rtrim($this->root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
+            $relPath = Str::after($file->getPathname(), rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
             $slug = Str::of($relPath)->replaceLast('.md', '')->replace(DIRECTORY_SEPARATOR, '/')->toString();
 
             // Determine the locale and base slug for this document
@@ -92,7 +92,7 @@ class DocumentationService
             ];
 
             // If we haven't seen this base slug yet, or this is the preferred locale, add/replace it
-            if (!isset($seenBaseSlugs[$baseSlug]) || $docLocale === $currentLocale) {
+            if (! isset($seenBaseSlugs[$baseSlug]) || $docLocale === $currentLocale) {
                 $seenBaseSlugs[$baseSlug] = $item;
             }
         }
@@ -107,7 +107,9 @@ class DocumentationService
 
     /**
      * Get a single document by slug.
+     *
      * @return array{title:string, html:string, toc:array<int,array{level:int,id:string,text:string}>, breadcrumbs:array<int,array{title:string,slug:?string}>, mtime:int, etag:string}
+     *
      * @throws FileNotFoundException
      */
     public function get(string $slug): array
@@ -118,7 +120,7 @@ class DocumentationService
         }
 
         $mtime = File::lastModified($path);
-        $cacheKey = 'pertuk:docs:' . md5($path . ':' . $mtime);
+        $cacheKey = 'pertuk:docs:'.md5($path.':'.$mtime);
 
         return Cache::remember($cacheKey, $this->ttl, function () use ($path, $slug, $mtime) {
             $raw = File::get($path);
@@ -150,7 +152,7 @@ class DocumentationService
                 ['title' => __('Documentation'), 'slug' => null],
             ];
 
-            $etag = 'W/"' . substr(sha1($path . '|' . $mtime . '|' . strlen($htmlWithLinks)), 0, 27) . '"';
+            $etag = 'W/"'.substr(sha1($path.'|'.$mtime.'|'.strlen($htmlWithLinks)), 0, 27).'"';
 
             // Language alternates
             [$alternates, $currentLocale] = $this->buildAlternates($slug);
@@ -174,6 +176,7 @@ class DocumentationService
     {
         return collect($this->list())->map(function ($item) {
             $data = $this->get($item['slug']);
+
             return [
                 'slug' => $item['slug'],
                 'title' => $data['title'],
@@ -190,8 +193,8 @@ class DocumentationService
                 'symbol' => '#',
             ],
         ]);
-        $env->addExtension(new CommonMarkCoreExtension());
-        $env->addExtension(new GithubFlavoredMarkdownExtension());
+        $env->addExtension(new CommonMarkCoreExtension);
+        $env->addExtension(new GithubFlavoredMarkdownExtension);
 
         return new MarkdownConverter($env);
     }
@@ -202,9 +205,11 @@ class DocumentationService
         try {
             $raw = File::get($path);
             $front = YamlFrontMatter::parse($raw);
+
             return $front->matter();
         } catch (\Throwable $e) {
             Log::warning('Failed to parse front matter', ['path' => $path, 'e' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -224,6 +229,7 @@ class DocumentationService
         if (preg_match('/<h1[^>]*>(.*?)<\/h1>/i', $html, $m)) {
             return trim(strip_tags($m[1]));
         }
+
         return null;
     }
 
@@ -232,14 +238,16 @@ class DocumentationService
      */
     protected function injectHeadingIdsAndToc(string $html): array
     {
-        $dom = new \DOMDocument();
-        @$dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+        $dom = new \DOMDocument;
+        @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
         $xpath = new \DOMXPath($dom);
 
         $toc = [];
         foreach (['h2', 'h3'] as $tag) {
-            $nodes = $xpath->query('//' . $tag);
-            if (! $nodes) continue;
+            $nodes = $xpath->query('//'.$tag);
+            if (! $nodes) {
+                continue;
+            }
 
             foreach ($nodes as $node) {
                 $text = trim($node->textContent);
@@ -249,7 +257,7 @@ class DocumentationService
                 $originalId = $id;
                 $counter = 1;
                 while (isset($toc[$id])) {
-                    $id = $originalId . '-' . $counter++;
+                    $id = $originalId.'-'.$counter++;
                 }
 
                 $node->setAttribute('id', $id);
@@ -283,25 +291,27 @@ class DocumentationService
 
                 // External links
                 if (Str::startsWith($href, ['http://', 'https://'])) {
-                    if (!Str::contains($tag, 'rel=')) {
+                    if (! Str::contains($tag, 'rel=')) {
                         $tag = str_replace('<a ', '<a rel="noopener noreferrer" ', $tag);
                     }
-                    if (!Str::contains($tag, 'target=')) {
+                    if (! Str::contains($tag, 'target=')) {
                         $tag = str_replace('<a ', '<a target="_blank" ', $tag);
                     }
                 }
                 // Relative markdown links
-                elseif (Str::endsWith($href, '.md') || (Str::startsWith($href, './') && !Str::contains($href, '.'))) {
+                elseif (Str::endsWith($href, '.md') || (Str::startsWith($href, './') && ! Str::contains($href, '.'))) {
                     $newUrl = $this->resolveRelativeDocLink($href, $currentSlug);
-                    $tag = str_replace('href="' . $href . '"', 'href="' . $newUrl . '"', $tag);
+                    $tag = str_replace('href="'.$href.'"', 'href="'.$newUrl.'"', $tag);
                 }
             }
+
             return $tag;
         }, $html) ?? $html;
 
         // Images: make src absolute to /storage or /docs assets path if needed
-        $html = preg_replace_callback('/<img\s+([^>]*src=\"[^\"]+\"[^>]*)>/i', function ($m) use ($currentSlug) {
+        $html = preg_replace_callback('/<img\s+([^>]*src=\"[^\"]+\"[^>]*)>/i', function ($m) {
             $tag = $m[0];
+
             return $tag;
         }, $html) ?? $html;
 
@@ -315,7 +325,7 @@ class DocumentationService
     protected function resolvePathFromSlug(string $slug): ?string
     {
         // First, try the exact slug as requested
-        $candidate = $this->root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $slug) . '.md';
+        $candidate = $this->root.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug).'.md';
         if (File::exists($candidate)) {
             return $candidate;
         }
@@ -323,7 +333,7 @@ class DocumentationService
         // If the slug has a locale suffix (e.g., .ckb, .ar), try falling back to the base version
         if (Str::contains($slug, '.')) {
             $basePath = Str::beforeLast($slug, '.');
-            $baseCandidate = $this->root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $basePath) . '.md';
+            $baseCandidate = $this->root.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $basePath).'.md';
             if (File::exists($baseCandidate)) {
                 return $baseCandidate;
             }
@@ -341,12 +351,14 @@ class DocumentationService
         if (Str::endsWith($target, '.md')) {
             $target = Str::beforeLast($target, '.md');
         }
-        $slug = trim($currentDir ? ($currentDir . '/' . $target) : $target, '/');
-        return url('/docs/' . $slug);
+        $slug = trim($currentDir ? ($currentDir.'/'.$target) : $target, '/');
+
+        return url('/docs/'.$slug);
     }
 
     /**
      * Build language alternate links for a given slug based on available files.
+     *
      * @return array{0: array<int,array{locale:string,label:string,url:string,active:bool}>, 1: string}
      */
     protected function buildAlternates(string $slug): array
@@ -354,7 +366,7 @@ class DocumentationService
         // Determine base slug (strip locale suffix like .ar or .ckb)
         $currentLocale = 'en';
         $baseSlug = $slug;
-        
+
         if (Str::endsWith($slug, '.ar')) {
             $currentLocale = 'ar';
             $baseSlug = Str::beforeLast($slug, '.ar');
@@ -371,8 +383,8 @@ class DocumentationService
 
         $candidates = [
             'en' => $baseSlug,
-            'ar' => $baseSlug . '.ar',
-            'ckb' => $baseSlug . '.ckb',
+            'ar' => $baseSlug.'.ar',
+            'ckb' => $baseSlug.'.ckb',
         ];
 
         $alternates = [];
@@ -382,7 +394,7 @@ class DocumentationService
                 $alternates[] = [
                     'locale' => $locale,
                     'label' => $locales[$locale],
-                    'url' => url('/docs/' . $candidateSlug),
+                    'url' => url('/docs/'.$candidateSlug),
                     'active' => $locale === $currentLocale,
                 ];
             }

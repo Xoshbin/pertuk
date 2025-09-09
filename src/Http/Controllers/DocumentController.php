@@ -25,7 +25,7 @@ class DocumentController extends Controller
         $response = response()->view('pertuk::show', $data + ['slug' => $slug]);
 
         // Caching headers
-        $lastModified = gmdate('D, d M Y H:i:s', $data['mtime']) . ' GMT';
+        $lastModified = gmdate('D, d M Y H:i:s', $data['mtime']).' GMT';
         $etag = $data['etag'];
 
         $ifModifiedSince = $request->header('If-Modified-Since');
@@ -46,6 +46,7 @@ class DocumentController extends Controller
     public function searchIndex(): \Illuminate\Http\JsonResponse
     {
         $items = DocumentationService::make()->buildIndex();
+
         return response()->json($items)->header('Content-Type', 'application/json');
     }
 }

@@ -13,7 +13,7 @@ return [
     'exclude' => [
         '.DS_Store',
         'README.md',
-        'Developers'
+        'Developers',
     ],
 
     // Cache TTL (seconds) for parsed HTML & metadata.

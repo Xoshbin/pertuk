@@ -1,0 +1,31 @@
+{
+    "name": "pertuk",
+    "version": "1.0.0",
+    "description": "[![Latest Version on Packagist](https://img.shields.io/packagist/v/xoshbin/pertuk.svg?style=flat-square)](https://packagist.org/packages/xoshbin/pertuk) [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/xoshbin/pertuk/run-tests?label=tests)](https://github.com/xoshbin/pertuk/actions?query=workflow%3Arun-tests+branch%3Amain) [![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/xoshbin/pertuk/fix-php-code-style-issues?label=code%20style)](https://github.com/xoshbin/pertuk/actions?query=workflow%3A\"Fix+PHP+code+style+issues\"+branch%3Amain) [![Total Downloads](https://img.shields.io/packagist/dt/xoshbin/pertuk.svg?style=flat-square)](https://packagist.org/packages/xoshbin/pertuk)",
+    "main": "vite.config.js",
+    "directories": {
+        "test": "tests"
+    },
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Xoshbin/pertuk.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/Xoshbin/pertuk/issues"
+    },
+    "homepage": "https://github.com/Xoshbin/pertuk#readme",
+    "dependencies": {
+        "highlight.js": "^11.11.1",
+        "laravel-vite-plugin": "^2.0.1",
+        "vite": "^7.1.5"
+    }
+}

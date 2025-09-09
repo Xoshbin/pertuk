@@ -1,0 +1,16 @@
+{
+  "resources/css/pertuk.css": {
+    "file": "assets/pertuk-BwyIOaY1.css",
+    "src": "resources/css/pertuk.css",
+    "isEntry": true,
+    "names": [
+      "pertuk.css"
+    ]
+  },
+  "resources/js/pertuk.js": {
+    "file": "assets/pertuk-y1RGodxo.js",
+    "name": "pertuk",
+    "src": "resources/js/pertuk.js",
+    "isEntry": true
+  }
+}

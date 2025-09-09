@@ -15,11 +15,6 @@
     @unless (app()->environment('testing'))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endunless
-    <link rel="stylesheet" href="{{ asset('vendor/pertuk/pertuk.css') }}">
-
-
-
-
 </head>
 
 <body class="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-200">

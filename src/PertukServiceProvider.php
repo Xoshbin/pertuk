@@ -19,13 +19,7 @@ class PertukServiceProvider extends PackageServiceProvider
             ->name('pertuk')
             ->hasConfigFile()
             ->hasViews()
-            ->hasRoute('web')
-            ->hasAssets();
-
-        // Publish CSS for standalone use
-        $this->publishes([
-            __DIR__.'/../resources/css/pertuk.css' => public_path('vendor/pertuk/pertuk.css'),
-        ], 'pertuk-assets');
+            ->hasRoute('web');
     }
 
     public function packageRegistered(): void

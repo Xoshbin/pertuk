@@ -65,6 +65,18 @@ return [
 ];
 ```
 
+## Frontend Assets (Tailwind CSS v4)
+
+This package uses Tailwind CSS classes in its views. To ensure the documentation pages are styled correctly, you must configure your main Laravel application's Vite build to scan the package's files.
+
+**1. Install Dependencies**
+
+In your main Laravel application, make sure you have Tailwind CSS and its Vite plugin installed:
+
+```bash
+npm install -D tailwindcss @tailwindcss/vite
+```
+
 Optionally, you can publish the views using:
 
 ```bash

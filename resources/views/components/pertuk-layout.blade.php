@@ -1,7 +1,7 @@
-@props(['title' => null])
+@props(['title' => null, 'currentLocale' => null])
 
 @php
-    $locale = app()->getLocale();
+    $locale = $currentLocale ?? app()->getLocale();
     $isRtl = in_array($locale, ['ar', 'ckb']);
 @endphp
 <!DOCTYPE html>
@@ -12,7 +12,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title . ' · ' . config('app.name') : __('Docs') . ' · ' . config('app.name') }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @unless (app()->environment('testing'))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endunless
     <link rel="stylesheet" href="{{ asset('vendor/pertuk/pertuk.css') }}">
 
 

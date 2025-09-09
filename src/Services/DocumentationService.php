@@ -35,7 +35,7 @@ class DocumentationService
      * List docs as a flat array with minimal metadata (for index/sidebar).
      * Prioritizes documents in the current application locale.
      *
-     * @return array<int, array{slug:string,title:string,order:int,path:string,mtime:int}>
+     * @return array<string, array{slug:string,title:string,order:int,path:string,mtime:int}>
      */
     public function list(): array
     {
@@ -122,7 +122,35 @@ class DocumentationService
         $mtime = File::lastModified($path);
         $cacheKey = 'pertuk:docs:'.md5($path.':'.$mtime);
 
-        return Cache::remember($cacheKey, $this->ttl, function () use ($path, $slug, $mtime) {
+        // Get cached value and validate it
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null && $this->isValidCachedDocument($cached)) {
+            return $cached;
+        }
+
+        // Determine if we fell back to a base file
+        $actualSlug = $this->getSlugFromPath($path);
+
+        // Generate fresh content and cache it
+        $result = $this->generateDocumentData($path, $actualSlug, $mtime);
+        Cache::put($cacheKey, $result, $this->ttl);
+        return $result;
+    }
+
+    /**
+     * Validate that cached document data has the expected structure
+     */
+    private function isValidCachedDocument($data): bool
+    {
+        return is_array($data)
+            && isset($data['title'], $data['html'], $data['toc'], $data['breadcrumbs'], $data['mtime'], $data['etag']);
+    }
+
+    /**
+     * Generate fresh document data
+     */
+    private function generateDocumentData(string $path, string $slug, int $mtime): array
+    {
             $raw = File::get($path);
             try {
                 $front = YamlFrontMatter::parse($raw);
@@ -167,7 +195,6 @@ class DocumentationService
                 'alternates' => $alternates,
                 'current_locale' => $currentLocale,
             ];
-        });
     }
 
     /** Build a lightweight search index (title + headings + plain text excerpt). */
@@ -243,27 +270,32 @@ class DocumentationService
         $xpath = new \DOMXPath($dom);
 
         $toc = [];
-        foreach (['h2', 'h3'] as $tag) {
-            $nodes = $xpath->query('//'.$tag);
-            if (! $nodes) {
-                continue;
-            }
+        $usedIds = [];
 
+        // Get all h2 and h3 elements in document order
+        $nodes = $xpath->query('//h2 | //h3');
+        if ($nodes) {
             foreach ($nodes as $node) {
+                if (!($node instanceof \DOMElement)) {
+                    continue;
+                }
+
                 $text = trim($node->textContent);
                 $id = Str::slug($text);
+                $level = (int) substr($node->tagName, 1); // Extract level from tag name (h2 -> 2, h3 -> 3)
 
                 // Ensure unique IDs
                 $originalId = $id;
                 $counter = 1;
-                while (isset($toc[$id])) {
+                while (isset($usedIds[$id])) {
                     $id = $originalId.'-'.$counter++;
                 }
+                $usedIds[$id] = true;
 
                 $node->setAttribute('id', $id);
 
                 $toc[] = [
-                    'level' => (int) substr($tag, 1),
+                    'level' => $level,
                     'id' => $id,
                     'text' => $text,
                 ];
@@ -341,6 +373,19 @@ class DocumentationService
 
         // Future: locale-aware resolution like docs/{locale}/{slug}.md
         return null;
+    }
+
+    /**
+     * Convert a file path back to a slug
+     */
+    protected function getSlugFromPath(string $path): string
+    {
+        // Remove the root directory and .md extension
+        $relativePath = Str::after($path, rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
+        $slug = Str::beforeLast($relativePath, '.md');
+
+        // Convert directory separators to forward slashes for URL
+        return str_replace(DIRECTORY_SEPARATOR, '/', $slug);
     }
 
     protected function resolveRelativeDocLink(string $href, string $currentSlug): string

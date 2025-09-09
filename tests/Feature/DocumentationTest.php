@@ -1,27 +1,84 @@
 <?php
 
-it('shows documentation index page', function () {
-    $response = $this->get(route('docs.index'));
+it('renders the docs index with at least one document', function () {
+    // Create a test document
+    $this->createTestMarkdownFile('payments.md', "---\ntitle: Payments\norder: 1\n---\n\n# Payments\n\nThis is a guide about payments.");
 
-    $response->assertStatus(200);
-    $response->assertSee('Documentation', false);
+    $response = $this->get('/docs');
+
+    $response->assertOk();
+    // Expect the Payments guide to be displayed
+    $response->assertSee('Payments', false);
 });
 
-it('shows individual documentation page by slug', function () {
-    // Skip if no docs directory exists
-    if (! is_dir(base_path('docs'))) {
-        $this->markTestSkipped('No docs directory found');
-    }
+it('renders a doc page with TOC and breadcrumbs', function () {
+    // Create a test document with multiple headings for TOC
+    $content = "---\ntitle: Receipt and Payment Vouchers\norder: 2\n---\n\n# Receipt and Payment Vouchers\n\n## Overview\n\nThis section covers vouchers.\n\n### Types of Vouchers\n\nDifferent types available.\n\n```php\n\$voucher = new Voucher();\n```\n\n## Processing\n\nHow to process vouchers.";
 
-    $response = $this->get(route('docs.show', ['slug' => 'test']));
+    $this->createTestMarkdownFile('receipt-payment-vouchers.md', $content, 'User Guide');
 
-    // Should return 404 for non-existent doc or 200 for existing
-    expect($response->status())->toBeIn([200, 404]);
+    $response = $this->get('/docs/User Guide/receipt-payment-vouchers');
+
+    $response->assertOk();
+    $response->assertSee('<h1', false);
+    $response->assertSee('Receipt and Payment Vouchers', false);
+
+    // TOC should include a link to a section
+    $response->assertSee('href="#', false);
+
+    // Breadcrumbs should include Docs and page title
+    $response->assertSee('Docs', false);
+    $response->assertSee('Receipt and Payment Vouchers', false);
+
+    // Code blocks should be marked for highlighting (hljs class present)
+    $response->assertSee('hljs', false);
+});
+
+it('returns 304 Not Modified when If-Modified-Since matches', function () {
+    // Create a test document
+    $this->createTestMarkdownFile('receipt-payment-vouchers.md', "---\ntitle: Receipt and Payment Vouchers\n---\n\n# Receipt and Payment Vouchers\n\nContent here.", 'User Guide');
+
+    $first = $this->get('/docs/User Guide/receipt-payment-vouchers');
+    $first->assertOk();
+
+    $lastModified = $first->headers->get('Last-Modified');
+    expect($lastModified)->not->toBeNull();
+
+    $second = $this->withHeaders([
+        'If-Modified-Since' => $lastModified,
+    ])->get('/docs/User Guide/receipt-payment-vouchers');
+
+    $second->assertStatus(304);
+});
+
+it('returns 304 Not Modified when If-None-Match (ETag) matches', function () {
+    // Create a test document
+    $this->createTestMarkdownFile('receipt-payment-vouchers.md', "---\ntitle: Receipt and Payment Vouchers\n---\n\n# Receipt and Payment Vouchers\n\nContent here.", 'User Guide');
+
+    $first = $this->get('/docs/User Guide/receipt-payment-vouchers');
+    $first->assertOk();
+
+    $etag = $first->headers->get('ETag');
+    expect($etag)->not->toBeNull();
+
+    $second = $this->withHeaders([
+        'If-None-Match' => $etag,
+    ])->get('/docs/User Guide/receipt-payment-vouchers');
+
+    $second->assertStatus(304);
 });
 
 it('shows documentation search index', function () {
-    $response = $this->get(route('docs.index.json'));
+    // Create a test document for the search index
+    $this->createTestMarkdownFile('test-doc.md', "---\ntitle: Test Document\n---\n\n# Test Document\n\nThis is a test document for search.");
+
+    $response = $this->get('/docs/index.json');
 
     $response->assertStatus(200);
     $response->assertHeader('Content-Type', 'application/json');
+
+    $data = $response->json();
+    expect($data)->toBeArray();
+    expect($data)->toHaveCount(1);
+    expect($data[0])->toHaveKeys(['slug', 'title', 'headings', 'excerpt']);
 });

@@ -9,16 +9,16 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 
 ## Features
 
-- 📖 **Markdown Processing**: Full CommonMark and GitHub Flavored Markdown support
-- 🌍 **Multi-Language Support**: Built-in support for English, Arabic, and Kurdish
-- 🔍 **Search Functionality**: Built-in search with JSON index
-- 🎨 **Beautiful UI**: Responsive design with dark mode support
-- 📱 **Mobile Friendly**: Optimized for all device sizes
-- 🗂️ **Auto Table of Contents**: Automatic TOC generation from headings
-- 🔗 **Smart Linking**: Automatic relative link resolution
-- 💾 **Caching**: Intelligent caching for performance
-- 🧭 **Breadcrumbs**: Automatic breadcrumb navigation
-- 🏷️ **Front Matter Support**: YAML front matter for metadata
+-   📖 **Markdown Processing**: Full CommonMark and GitHub Flavored Markdown support
+-   🌍 **Multi-Language Support**: Built-in support for English, Arabic, and Kurdish
+-   🔍 **Search Functionality**: Built-in search with JSON index
+-   🎨 **Beautiful UI**: Responsive design with dark mode support
+-   📱 **Mobile Friendly**: Optimized for all device sizes
+-   🗂️ **Auto Table of Contents**: Automatic TOC generation from headings
+-   🔗 **Smart Linking**: Automatic relative link resolution
+-   💾 **Caching**: Intelligent caching for performance
+-   🧭 **Breadcrumbs**: Automatic breadcrumb navigation
+-   🏷️ **Front Matter Support**: YAML front matter for metadata
 
 ## Installation
 
@@ -102,7 +102,6 @@ Add YAML front matter to your markdown files for metadata:
 title: "Getting Started"
 order: 1
 ---
-
 # Getting Started
 
 Your markdown content here...
@@ -136,24 +135,6 @@ $doc = $docs->get('getting-started');
 $searchIndex = $docs->buildIndex();
 ```
 
-### Filament Integration
-
-Use the included DocsAction for Filament:
-
-```php
-use Xoshbin\Pertuk\Support\DocsAction;
-
-// In your Filament resource
-protected function getHeaderActions(): array
-{
-    return [
-        DocsAction::make('payments'),
-        // or
-        DocsAction::make('custom-slug', 'Custom Label'),
-    ];
-}
-```
-
 ## Testing
 
 ```bash
@@ -174,8 +155,8 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [Xoshbin](https://github.com/xoshbin)
-- [All Contributors](../../contributors)
+-   [Xoshbin](https://github.com/xoshbin)
+-   [All Contributors](../../contributors)
 
 ## License
 

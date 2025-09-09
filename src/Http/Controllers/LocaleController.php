@@ -20,7 +20,7 @@ class LocaleController extends Controller
         // Validate locale against supported locales
         $supportedLocales = ['en', 'ckb', 'ar'];
 
-        if (!in_array($locale, $supportedLocales)) {
+        if (! in_array($locale, $supportedLocales)) {
             return response('Invalid locale', 400);
         }
 
@@ -31,7 +31,7 @@ class LocaleController extends Controller
         App::setLocale($locale);
 
         // Get dynamic docs route prefix from config
-        $docsPrefix = '/' . config('pertuk.route_prefix', 'docs') . '/';
+        $docsPrefix = '/'.config('pertuk.route_prefix', 'docs').'/';
 
         // If this is an AJAX request, return success with redirect URL if on docs page
         if ($request->ajax()) {
@@ -65,11 +65,11 @@ class LocaleController extends Controller
     {
         // Get dynamic docs route prefix from config
         $docsPrefix = config('pertuk.route_prefix', 'docs');
-        $docsPrefixWithSlash = '/' . $docsPrefix . '/';
+        $docsPrefixWithSlash = '/'.$docsPrefix.'/';
 
         // Extract the slug from the URL
         $path = parse_url($url, PHP_URL_PATH);
-        if (!$path || !str_starts_with($path, $docsPrefixWithSlash)) {
+        if (! $path || ! str_starts_with($path, $docsPrefixWithSlash)) {
             return url($docsPrefix);
         }
 
@@ -95,6 +95,6 @@ class LocaleController extends Controller
             $newSlug .= '.ckb';
         }
 
-        return url($docsPrefix . '/' . $newSlug);
+        return url($docsPrefix.'/'.$newSlug);
     }
 }

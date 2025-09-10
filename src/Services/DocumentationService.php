@@ -221,13 +221,24 @@ class DocumentationService
 
     protected function markdownConverter(): MarkdownConverter
     {
-        $env = new Environment([
+        // Create environment without custom config first so extensions can register
+        // their schema before we merge extension-specific config. Merging config
+        // too early can trigger Nette schema validation for unknown keys.
+        $env = new Environment();
+        $env->addExtension(new CommonMarkCoreExtension);
+        $env->addExtension(new GithubFlavoredMarkdownExtension);
+
+        // Merge heading_permalink config after extensions have been added so the
+        // HeadingPermalinkExtension can register its schema first.
+        // Note: Environment::mergeConfig is deprecated but acceptable here to
+        // ensure schema-aware merging order.
+        // phpcs:ignore SlevomatCodingStandard.Commenting.Todo.CommentFound
+        // @phpstan-ignore-next-line -- merging config after extensions are registered to avoid validation errors
+        $env->mergeConfig([
             'heading_permalink' => [
                 'symbol' => '#',
             ],
         ]);
-        $env->addExtension(new CommonMarkCoreExtension);
-        $env->addExtension(new GithubFlavoredMarkdownExtension);
 
         return new MarkdownConverter($env);
     }

@@ -282,9 +282,12 @@ class DocumentationService
         // libxml error handling state so we don't affect global state
         // used by the test harness (PHPUnit/Pest).
         $libxmlPrevious = libxml_use_internal_errors(true);
-        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
-        libxml_clear_errors();
-        libxml_use_internal_errors($libxmlPrevious);
+        try {
+            $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($libxmlPrevious);
+        }
         $xpath = new \DOMXPath($dom);
 
         $node = $xpath->query('//h1')->item(0);
@@ -323,9 +326,12 @@ class DocumentationService
         // libxml error handling state so we don't affect global state
         // used by the test harness (PHPUnit/Pest).
         $libxmlPrevious = libxml_use_internal_errors(true);
-        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
-        libxml_clear_errors();
-        libxml_use_internal_errors($libxmlPrevious);
+        try {
+            $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($libxmlPrevious);
+        }
         $xpath = new \DOMXPath($dom);
 
         $toc = [];
@@ -434,16 +440,20 @@ class DocumentationService
 
     protected function resolvePathFromSlug(string $slug): ?string
     {
-        // First, try the exact slug as requested
-        $candidate = $this->root.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug).'.md';
+        // The slug already includes the file extension, so we just need to replace the directory separators.
+        $candidate = $this->root.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
+        if (! Str::endsWith($candidate, '.md')) {
+            $candidate .= '.md';
+        }
+
         if (File::exists($candidate)) {
             return $candidate;
         }
 
         // If the slug has a locale suffix (e.g., .ckb, .ar), try falling back to the base version
         if (Str::contains($slug, '.')) {
-            $basePath = Str::beforeLast($slug, '.');
-            $baseCandidate = $this->root.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $basePath).'.md';
+            $baseSlug = Str::beforeLast($slug, '.');
+            $baseCandidate = $this->root.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $baseSlug).'.md';
             if (File::exists($baseCandidate)) {
                 return $baseCandidate;
             }

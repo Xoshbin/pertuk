@@ -224,7 +224,7 @@ class DocumentationService
         // Create environment without custom config first so extensions can register
         // their schema before we merge extension-specific config. Merging config
         // too early can trigger Nette schema validation for unknown keys.
-        $env = new Environment();
+        $env = new Environment;
         $env->addExtension(new CommonMarkCoreExtension);
         $env->addExtension(new GithubFlavoredMarkdownExtension);
 

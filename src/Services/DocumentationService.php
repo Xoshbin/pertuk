@@ -277,17 +277,17 @@ class DocumentationService
     protected function extractH1(string $html): ?string
     {
         $dom = new \DOMDocument;
-        // Use libxml internal error handling locally to avoid emitting
-        // warnings from malformed HTML. Save and restore the previous
-        // libxml error handling state so we don't affect global state
-        // used by the test harness (PHPUnit/Pest).
-        $libxmlPrevious = libxml_use_internal_errors(true);
+
+        // Use output buffering to capture any libxml warnings without changing global error handling
+        ob_start();
+        $errorLevel = error_reporting(E_ALL & ~E_WARNING);
         try {
             $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
         } finally {
-            libxml_clear_errors();
-            libxml_use_internal_errors($libxmlPrevious);
+            error_reporting($errorLevel);
+            ob_end_clean();
         }
+
         $xpath = new \DOMXPath($dom);
 
         $node = $xpath->query('//h1')->item(0);
@@ -321,17 +321,17 @@ class DocumentationService
     protected function injectHeadingIdsAndToc(string $html): array
     {
         $dom = new \DOMDocument;
-        // Use libxml internal error handling locally to avoid emitting
-        // warnings from malformed HTML. Save and restore the previous
-        // libxml error handling state so we don't affect global state
-        // used by the test harness (PHPUnit/Pest).
-        $libxmlPrevious = libxml_use_internal_errors(true);
+
+        // Use output buffering to capture any libxml warnings without changing global error handling
+        ob_start();
+        $errorLevel = error_reporting(E_ALL & ~E_WARNING);
         try {
             $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
         } finally {
-            libxml_clear_errors();
-            libxml_use_internal_errors($libxmlPrevious);
+            error_reporting($errorLevel);
+            ob_end_clean();
         }
+
         $xpath = new \DOMXPath($dom);
 
         $toc = [];

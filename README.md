@@ -7,7 +7,7 @@
 
 Pertuk is a powerful Laravel documentation package that provides a complete documentation system with multi-language support, markdown processing, search functionality, and a beautiful, responsive UI.
 
-![img.png](assets/screenshot.png)
+![img.png](assets/screenshot.jpeg)
 
 ## Features
 

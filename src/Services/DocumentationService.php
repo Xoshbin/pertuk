@@ -277,7 +277,14 @@ class DocumentationService
     protected function extractH1(string $html): ?string
     {
         $dom = new \DOMDocument;
-        @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+    // Use libxml internal error handling locally to avoid emitting
+    // warnings from malformed HTML. Save and restore the previous
+    // libxml error handling state so we don't affect global state
+    // used by the test harness (PHPUnit/Pest).
+    $libxmlPrevious = libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+    libxml_clear_errors();
+    libxml_use_internal_errors($libxmlPrevious);
         $xpath = new \DOMXPath($dom);
 
         $node = $xpath->query('//h1')->item(0);
@@ -311,7 +318,14 @@ class DocumentationService
     protected function injectHeadingIdsAndToc(string $html): array
     {
         $dom = new \DOMDocument;
-        @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+    // Use libxml internal error handling locally to avoid emitting
+    // warnings from malformed HTML. Save and restore the previous
+    // libxml error handling state so we don't affect global state
+    // used by the test harness (PHPUnit/Pest).
+    $libxmlPrevious = libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+    libxml_clear_errors();
+    libxml_use_internal_errors($libxmlPrevious);
         $xpath = new \DOMXPath($dom);
 
         $toc = [];

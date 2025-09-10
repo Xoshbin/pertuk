@@ -10,8 +10,8 @@ use Illuminate\Support\Str;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
-use League\CommonMark\MarkdownConverter;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
+use League\CommonMark\MarkdownConverter;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
 
 class DocumentationService
@@ -225,14 +225,14 @@ class DocumentationService
         // Create environment without custom config first so extensions can register
         // their schema before we merge extension-specific config. Merging config
         // too early can trigger Nette schema validation for unknown keys.
-        $env = new Environment();
-    $env->addExtension(new CommonMarkCoreExtension);
-    $env->addExtension(new GithubFlavoredMarkdownExtension);
+        $env = new Environment;
+        $env->addExtension(new CommonMarkCoreExtension);
+        $env->addExtension(new GithubFlavoredMarkdownExtension);
 
-    // Register HeadingPermalinkExtension so its schema is available before
-    // merging config. This prevents Nette/League config validation errors
-    // when providing heading_permalink options.
-    $env->addExtension(new HeadingPermalinkExtension());
+        // Register HeadingPermalinkExtension so its schema is available before
+        // merging config. This prevents Nette/League config validation errors
+        // when providing heading_permalink options.
+        $env->addExtension(new HeadingPermalinkExtension);
 
         // Merge heading_permalink config after extensions have been added so the
         // HeadingPermalinkExtension can register its schema first.

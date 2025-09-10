@@ -11,6 +11,7 @@ use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\MarkdownConverter;
+use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
 
 class DocumentationService
@@ -224,9 +225,14 @@ class DocumentationService
         // Create environment without custom config first so extensions can register
         // their schema before we merge extension-specific config. Merging config
         // too early can trigger Nette schema validation for unknown keys.
-        $env = new Environment;
-        $env->addExtension(new CommonMarkCoreExtension);
-        $env->addExtension(new GithubFlavoredMarkdownExtension);
+        $env = new Environment();
+    $env->addExtension(new CommonMarkCoreExtension);
+    $env->addExtension(new GithubFlavoredMarkdownExtension);
+
+    // Register HeadingPermalinkExtension so its schema is available before
+    // merging config. This prevents Nette/League config validation errors
+    // when providing heading_permalink options.
+    $env->addExtension(new HeadingPermalinkExtension());
 
         // Merge heading_permalink config after extensions have been added so the
         // HeadingPermalinkExtension can register its schema first.
@@ -270,11 +276,33 @@ class DocumentationService
 
     protected function extractH1(string $html): ?string
     {
-        if (preg_match('/<h1[^>]*>(.*?)<\/h1>/i', $html, $m)) {
-            return trim(strip_tags($m[1]));
+        $dom = new \DOMDocument;
+        @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+        $xpath = new \DOMXPath($dom);
+
+        $node = $xpath->query('//h1')->item(0);
+        if (! $node instanceof \DOMElement) {
+            return null;
         }
 
-        return null;
+        /** @var \DOMElement $node */
+
+        // Remove any permalink anchors inserted by HeadingPermalinkExtension
+        $anchors = $node->getElementsByTagName('a');
+        /** @var \DOMElement $a */
+        foreach ($anchors as $a) {
+            // getElementsByTagName yields DOMElement nodes for 'a' tags
+            $class = $a->getAttribute('class');
+            if ($class !== '' && str_contains($class, 'heading-permalink')) {
+                if ($a->parentNode instanceof \DOMNode) {
+                    $a->parentNode->removeChild($a);
+                }
+            }
+        }
+
+        $text = trim($node->textContent);
+
+        return $text !== '' ? $text : null;
     }
 
     /**
@@ -297,7 +325,26 @@ class DocumentationService
                     continue;
                 }
 
-                $text = trim($node->textContent);
+                // Clone the heading node and strip any permalink anchors so the
+                // TOC entry text doesn't include the permalink symbol (e.g. '#').
+                $nodeClone = $node->cloneNode(true);
+
+                // Clone node and remove any permalink anchors from the clone.
+                // cloneNode returns a DOMNode, but we know we're cloning an element.
+                /** @var \DOMElement $nodeClone */
+                $nodeClone = $nodeClone;
+                $anchors = $nodeClone->getElementsByTagName('a');
+                /** @var \DOMElement $a */
+                foreach ($anchors as $a) {
+                    $class = $a->getAttribute('class');
+                    if ($class !== '' && str_contains($class, 'heading-permalink')) {
+                        if ($a->parentNode instanceof \DOMNode) {
+                            $a->parentNode->removeChild($a);
+                        }
+                    }
+                }
+
+                $text = trim($nodeClone->textContent);
                 $id = Str::slug($text);
                 $level = (int) substr($node->tagName, 1); // Extract level from tag name (h2 -> 2, h3 -> 3)
 

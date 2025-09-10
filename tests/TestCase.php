@@ -75,7 +75,8 @@ class TestCase extends Orchestra
         $docsPath = $this->getTestDocsPath();
 
         if (! File::exists($docsPath)) {
-            File::makeDirectory($docsPath, 0755, true);
+            // Use force=true to avoid race-condition mkdir errors in parallel tests
+            File::makeDirectory($docsPath, 0755, true, true);
         }
     }
 
@@ -94,7 +95,8 @@ class TestCase extends Orchestra
         $fullPath = $subdirectory ? $docsPath.'/'.$subdirectory : $docsPath;
 
         if (! File::exists($fullPath)) {
-            File::makeDirectory($fullPath, 0755, true);
+            // Use force=true when creating subdirectories during tests
+            File::makeDirectory($fullPath, 0755, true, true);
         }
 
         $filePath = $fullPath.'/'.$filename;

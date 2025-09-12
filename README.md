@@ -12,12 +12,11 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 ## Features
 
 -   📖 **Markdown Processing**: Full CommonMark and GitHub Flavored Markdown support
--   🌍 **Multi-Language Support**: Built-in support for English, Arabic, and Kurdish
+-   🌍 **Multi-Language Support**: Built-in support for English, Kurdish, and Arabic 
 -   🔍 **Search Functionality**: Built-in search with JSON index
 -   🎨 **Beautiful UI**: Responsive design with dark mode support
 -   📱 **Mobile Friendly**: Optimized for all device sizes
 -   🗂️ **Auto Table of Contents**: Automatic TOC generation from headings
--   🔗 **Smart Linking**: Automatic relative link resolution
 -   💾 **Caching**: Intelligent caching for performance
 -   🧭 **Breadcrumbs**: Automatic breadcrumb navigation
 -   🏷️ **Front Matter Support**: YAML front matter for metadata

@@ -15,12 +15,14 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 -   🎨 **Shiki Syntax Highlighting**: Server-side, VS-Code quality syntax highlighting
 -   🌍 **Multi-Language Support**: Built-in support for English, Kurdish, and Arabic 
 -   🔍 **Deep Local Search**: Full-content indexing via MiniSearch with relevancy scoring
+-   🧩 **Interactive Components**: Built-in support for Tabs and Accordions in Markdown
 -   🎨 **Modern UI**: Responsive design with interactive sidebar and dark mode
 -   📱 **Mobile Friendly**: Optimized for all device sizes
 -   🗂️ **Auto Table of Contents**: Automatic TOC generation from headings
 -   💾 **Intelligent Caching**: High-performance document rendering and caching
 -   🧭 **Breadcrumbs**: Automatic breadcrumb navigation
 -   🏷️ **Front Matter Support**: YAML front matter for metadata
+-   💡 **Admonitions**: Support for tip, warning, and danger callouts
 
 ## Configuration
 
@@ -78,7 +80,7 @@ php artisan vendor:publish --tag="pertuk-config"
 4. Ensure you have the frontend dependencies installed if you are building assets yourself:
 
 ```bash
-npm install minisearch
+npm install minisearch alpinejs @alpinejs/collapse
 ```
 
 5. Create a `docs` directory and add a markdown file, e.g. `docs/getting-started.md`.
@@ -121,6 +123,70 @@ order: 1
 # Getting Started
 
 Your markdown content here...
+```
+
+### Interactive Components (Alpine.js)
+
+Pertuk includes built-in interactive components powered by Alpine.js. These can be used directly in your Markdown files.
+
+#### Tabs
+
+Use tabs to group related content, like code examples in different languages.
+
+```html
+<x-pertuk-tabs>
+<x-pertuk-tab name="PHP">
+
+```php
+echo "Hello World";
+```
+
+</x-pertuk-tab>
+<x-pertuk-tab name="JS">
+
+```javascript
+console.log("Hello World");
+```
+
+</x-pertuk-tab>
+</x-pertuk-tabs>
+```
+
+#### Accordion
+
+Use accordions for collapsible sections like FAQs.
+
+```html
+<x-pertuk-accordion>
+<x-pertuk-accordion-item title="Can I customize the design?">
+
+Yes! You can publish the views and CSS to match your brand's identity.
+
+</x-pertuk-accordion-item>
+<x-pertuk-accordion-item title="What about performance?">
+
+Pertuk uses intelligent caching and server-side rendering for lightning-fast speeds.
+
+</x-pertuk-accordion-item>
+</x-pertuk-accordion>
+```
+
+### Admonitions
+
+Use special blocks for callouts:
+
+```markdown
+::: tip
+This is a helpful tip.
+:::
+
+::: warning
+Be careful with this setting.
+:::
+
+::: danger
+This action cannot be undone.
+:::
 ```
 
 ### Multi-Language Support

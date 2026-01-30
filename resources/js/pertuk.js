@@ -1,6 +1,11 @@
 
 
+import Alpine from "alpinejs";
+import collapse from "@alpinejs/collapse";
 import MiniSearch from "minisearch";
+
+window.Alpine = Alpine;
+Alpine.plugin(collapse);
 
 /**
  * Documentation JavaScript functionality
@@ -11,12 +16,107 @@ class DocsManager {
     }
 
     init() {
+        this.initAlpine();
         this.initThemeToggle();
         this.initSyntaxHighlighting();
         this.initSearch();
         this.initTableOfContents();
         this.initKeyboardShortcuts();
         this.initGlobalLanguageSelector();
+    }
+
+    /**
+     * Initialize Alpine.js components for interactive elements
+     */
+    initAlpine() {
+        Alpine.data("pertukTabs", () => ({
+            activeTab: 0,
+            tabs: [],
+            init() {
+                // Collect tabs from the DOM
+                const tabElements = Array.from(
+                    this.$el.querySelectorAll("x-pertuk-tab")
+                );
+                this.tabs = tabElements.map((el, i) => ({
+                    name: el.getAttribute("name") || `Tab ${i + 1}`,
+                    index: i,
+                    el: el,
+                }));
+
+                // Injected header
+                if (
+                    !this.$el.querySelector(".pertuk-tabs-header") &&
+                    this.tabs.length > 0
+                ) {
+                    const header = document.createElement("div");
+                    header.className = "pertuk-tabs-header";
+                    this.tabs.forEach((tab, i) => {
+                        const btn = document.createElement("button");
+                        btn.type = "button";
+                        btn.innerText = tab.name;
+                        btn.className = i === 0 ? "active" : "";
+                        btn.onclick = () => (this.activeTab = i);
+                        header.appendChild(btn);
+                        tab.btn = btn;
+                    });
+                    this.$el.insertBefore(header, this.$el.firstChild);
+                }
+
+                this.$watch("activeTab", (val) => {
+                    this.tabs.forEach((tab, i) => {
+                        tab.el.style.display = i === val ? "block" : "none";
+                        if (tab.btn) {
+                            tab.btn.classList.toggle("active", i === val);
+                        }
+                    });
+                });
+
+                // Set initial state
+                this.tabs.forEach((tab, i) => {
+                    tab.el.style.display =
+                        i === this.activeTab ? "block" : "none";
+                });
+            },
+        }));
+
+        Alpine.data("pertukAccordion", () => ({
+            activeItem: null,
+            init() {
+                const items = Array.from(
+                    this.$el.querySelectorAll("x-pertuk-accordion-item")
+                );
+                items.forEach((item, i) => {
+                    const title =
+                        item.getAttribute("title") || `Item ${i + 1}`;
+                    const content = item.innerHTML;
+
+                    // Wrap content and add header
+                    item.innerHTML = `
+                        <button type="button" class="pertuk-accordion-item-header" @click="toggle(${i})">
+                            <span>${title}</span>
+                            <svg class="pertuk-accordion-icon" :class="isOpen(${i}) ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div class="pertuk-accordion-item-content" x-show="isOpen(${i})" x-collapse>
+                            <div class="pertuk-accordion-body">${content}</div>
+                        </div>
+                    `;
+                    item.classList.add("pertuk-accordion-item");
+                });
+            },
+            toggle(id) {
+                this.activeItem = this.activeItem === id ? null : id;
+            },
+            isOpen(id) {
+                return this.activeItem === id;
+            },
+        }));
+
+        if (!window.AlpineStarted) {
+            Alpine.start();
+            window.AlpineStarted = true;
+        }
     }
 
     /**

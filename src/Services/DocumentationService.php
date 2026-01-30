@@ -15,6 +15,7 @@ use League\CommonMark\MarkdownConverter;
 use Spatie\CommonMarkShikiHighlighter\HighlightCodeExtension;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
 use Xoshbin\Pertuk\Extensions\Admonition\AdmonitionExtension;
+use Xoshbin\Pertuk\Extensions\Component\ComponentExtension;
 
 class DocumentationService
 {
@@ -331,6 +332,9 @@ class DocumentationService
 
         // Register Admonition extension for ::: tip, ::: warning, ::: danger
         $env->addExtension(new AdmonitionExtension);
+
+        // Register custom components (tabs, accordion)
+        $env->addExtension(new ComponentExtension);
 
         // Merge heading_permalink config after extensions have been added so the
         // HeadingPermalinkExtension can register its schema first.

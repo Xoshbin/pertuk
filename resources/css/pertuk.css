@@ -16,6 +16,44 @@
     @apply opacity-70;
 }
 
+/* Custom Components: Tabs and Accordion */
+.docs-content x-pertuk-tabs {
+    @apply block border border-gray-200 dark:border-gray-700 rounded-xl my-8 overflow-hidden bg-white dark:bg-gray-900 shadow-sm;
+}
+
+.pertuk-tabs-header {
+    @apply flex border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 px-2;
+}
+
+.pertuk-tabs-header button {
+    @apply px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent transition-all hover:text-gray-700 dark:hover:text-gray-200;
+}
+
+.pertuk-tabs-header button.active {
+    @apply border-orange-500 text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-900;
+}
+
+.docs-content x-pertuk-tab {
+    @apply block p-6;
+}
+
+/* Accordion */
+.docs-content x-pertuk-accordion {
+    @apply block border border-gray-200 dark:border-gray-700 rounded-xl my-8 overflow-hidden divide-y divide-gray-200 dark:divide-gray-700 shadow-sm bg-white dark:bg-gray-900;
+}
+
+.pertuk-accordion-item-header {
+    @apply flex items-center justify-between w-full px-6 py-4 text-left font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors;
+}
+
+.pertuk-accordion-item-content {
+    @apply px-6 py-4 bg-gray-50/30 dark:bg-gray-900/30;
+}
+
+.pertuk-accordion-icon {
+    @apply w-5 h-5 text-gray-500 transition-transform duration-200;
+}
+
 .docs-prose a.heading-anchor:hover {
     @apply opacity-100 text-orange-500;
 }

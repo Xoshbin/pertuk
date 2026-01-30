@@ -30,8 +30,8 @@ it('renders a doc page with TOC and breadcrumbs', function () {
     $response->assertSee('Docs', false);
     $response->assertSee('Receipt and Payment Vouchers', false);
 
-    // Code blocks should be marked for highlighting (hljs class present)
-    $response->assertSee('hljs', false);
+    // Code blocks should be present
+    $response->assertSee('<pre', false);
 });
 
 it('returns 304 Not Modified when If-Modified-Since matches', function () {
@@ -80,5 +80,5 @@ it('shows documentation search index', function () {
     $data = $response->json();
     expect($data)->toBeArray();
     expect($data)->toHaveCount(1);
-    expect($data[0])->toHaveKeys(['slug', 'title', 'headings', 'excerpt']);
+    expect($data[0])->toHaveKeys(['id', 'slug', 'title', 'heading', 'content', 'anchor']);
 });

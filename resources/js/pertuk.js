@@ -1,5 +1,7 @@
 
 
+import MiniSearch from "minisearch";
+
 /**
  * Documentation JavaScript functionality
  */
@@ -157,15 +159,34 @@ class DocsManager {
                 const res = await fetch("/docs/index.json", {
                     headers: { Accept: "application/json" },
                 });
-                index = await res.json();
+                const data = await res.json();
+
+                index = new MiniSearch({
+                    fields: ["title", "heading", "content"], // fields to index for full-text search
+                    storeFields: [
+                        "slug",
+                        "title",
+                        "heading",
+                        "content",
+                        "anchor",
+                    ], // fields to return with search results
+                    searchOptions: {
+                        boost: { title: 2, heading: 1.5, content: 1 },
+                        fuzzy: 0.2,
+                        prefix: true,
+                    },
+                });
+
+                index.addAll(data);
             } catch (e) {
                 console.warn("Failed to load search index:", e);
-                index = [];
+                index = null;
             }
             return index;
         };
 
         const escapeHtml = (text) => {
+            if (!text) return "";
             const div = document.createElement("div");
             div.textContent = text;
             return div.innerHTML;
@@ -180,20 +201,28 @@ class DocsManager {
 
             results.innerHTML = items
                 .slice(0, 8)
-                .map(
-                    (it) => `
-                <a class="block rounded-md px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" href="/docs/${
-                    it.slug
-                }">
+                .map((it) => {
+                    const href = it.anchor
+                        ? `/docs/${it.slug}#${it.anchor}`
+                        : `/docs/${it.slug}`;
+                    const displayTitle = it.heading
+                        ? `${it.title} > ${it.heading}`
+                        : it.title;
+                    const excerpt = it.content
+                        ? it.content.substring(0, 100) + "..."
+                        : "";
+
+                    return `
+                <a class="block rounded-md px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" href="${href}">
                     <div class="font-medium text-gray-900 dark:text-white">${escapeHtml(
-                        it.title
+                        displayTitle
                     )}</div>
                     <div class="mt-1 text-xs text-gray-600 dark:text-gray-400">${escapeHtml(
-                        it.excerpt
+                        excerpt
                     )}</div>
                 </a>
-            `
-                )
+            `;
+                })
                 .join("");
             results.classList.remove("hidden");
         };
@@ -205,24 +234,8 @@ class DocsManager {
             }
 
             ensureIndex().then((idx) => {
-                const q = query.toLowerCase();
-                const matches = idx
-                    .filter(
-                        (it) =>
-                            it.title.toLowerCase().includes(q) ||
-                            (it.headings || []).some((h) =>
-                                (h || "").toLowerCase().includes(q)
-                            ) ||
-                            (it.excerpt || "").toLowerCase().includes(q)
-                    )
-                    .sort((a, b) => {
-                        // Prioritize title matches
-                        const aTitle = a.title.toLowerCase().includes(q);
-                        const bTitle = b.title.toLowerCase().includes(q);
-                        if (aTitle && !bTitle) return -1;
-                        if (!aTitle && bTitle) return 1;
-                        return 0;
-                    });
+                if (!idx) return;
+                const matches = idx.search(query);
                 render(matches);
             });
         };

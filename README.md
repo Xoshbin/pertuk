@@ -11,13 +11,14 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 
 ## Features
 
--   📖 **Markdown Processing**: Full CommonMark and GitHub Flavored Markdown support
+-   📖 **Premium Markdown**: Full CommonMark and GitHub Flavored Markdown support
+-   🎨 **Shiki Syntax Highlighting**: Server-side, VS-Code quality syntax highlighting
 -   🌍 **Multi-Language Support**: Built-in support for English, Kurdish, and Arabic 
--   🔍 **Search Functionality**: Built-in search with JSON index
--   🎨 **Beautiful UI**: Responsive design with dark mode support
+-   🔍 **Deep Local Search**: Full-content indexing via MiniSearch with relevancy scoring
+-   🎨 **Modern UI**: Responsive design with interactive sidebar and dark mode
 -   📱 **Mobile Friendly**: Optimized for all device sizes
 -   🗂️ **Auto Table of Contents**: Automatic TOC generation from headings
--   💾 **Caching**: Intelligent caching for performance
+-   💾 **Intelligent Caching**: High-performance document rendering and caching
 -   🧭 **Breadcrumbs**: Automatic breadcrumb navigation
 -   🏷️ **Front Matter Support**: YAML front matter for metadata
 
@@ -62,17 +63,29 @@ return [
 composer require xoshbin/pertuk
 ```
 
-2. (Optional) Publish the config:
+2. Publish the assets (JS and CSS):
+
+```bash
+php artisan vendor:publish --tag="pertuk-assets"
+```
+
+3. (Optional) Publish the config:
 
 ```bash
 php artisan vendor:publish --tag="pertuk-config"
 ```
 
-3. Create a `docs` directory and add a markdown file, e.g. `docs/getting-started.md`.
+4. Ensure you have the frontend dependencies installed if you are building assets yourself:
 
-4. Visit your docs at `/docs` (or `/{route_prefix}` if you changed `pertuk.route_prefix`).
+```bash
+npm install minisearch
+```
 
--   Optional: publish the views to customize the layout and markup:
+5. Create a `docs` directory and add a markdown file, e.g. `docs/getting-started.md`.
+
+6. Visit your docs at `/docs` (or `/{route_prefix}` if you changed `pertuk.route_prefix`).
+
+-   **Customization**: Publish the views to customize the layout and markup:
 
 ```bash
 php artisan vendor:publish --tag="pertuk-views"

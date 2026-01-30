@@ -206,20 +206,110 @@ class DocumentationService
         ];
     }
 
-    /** Build a lightweight search index (title + headings + plain text excerpt). */
-    /** @return array<int, array{slug:string,title:string,headings:array<int,string>,excerpt:string}> */
+    /** Build a lightweight search index with content chunks for better relevancy. */
+    /** @return array<int, array{id:string, slug:string, title:string, heading:?string, content:string, anchor:?string}> */
     public function buildIndex(): array
     {
-        return collect($this->list())->map(function ($item) {
-            $data = $this->get($item['slug']);
+        $index = [];
+        foreach ($this->list() as $item) {
+            try {
+                $data = $this->get($item['slug']);
+                $chunks = $this->extractChunks($data['html'], $item['slug'], $data['title']);
+                foreach ($chunks as $chunk) {
+                    $index[] = $chunk;
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Failed to index doc: {$item['slug']}", ['e' => $e->getMessage()]);
+            }
+        }
 
-            return [
-                'slug' => $item['slug'],
-                'title' => $data['title'],
-                'headings' => collect($data['toc'])->pluck('text')->toArray(),
-                'excerpt' => Str::limit(strip_tags($data['html']), 200),
-            ];
-        })->values()->all();
+        return $index;
+    }
+
+    /**
+     * Extract chunks of content from HTML for better search indexing.
+     * Each chunk represents a section of the document, typically divided by headings.
+     *
+     * @return array<int, array{id:string, slug:string, title:string, heading:?string, content:string, anchor:?string}>
+     */
+    protected function extractChunks(string $html, string $slug, string $title): array
+    {
+        $dom = $this->createDomDocument($html);
+        $xpath = new \DOMXPath($dom);
+
+        // Find all headings from h1 to h6
+        $nodes = $xpath->query('//h1 | //h2 | //h3 | //h4 | //h5 | //h6');
+
+        $chunks = [];
+
+        // First, handle content BEFORE the first heading if any
+        $body = $dom->getElementsByTagName('body')->item(0);
+        if ($body) {
+            $preContentNodes = [];
+            $curr = $body->firstChild;
+            while ($curr && ! in_array(strtolower($curr->nodeName), ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])) {
+                $preContentNodes[] = $curr;
+                $curr = $curr->nextSibling;
+            }
+
+            if (! empty($preContentNodes)) {
+                $content = '';
+                foreach ($preContentNodes as $node) {
+                    $content .= $dom->saveHTML($node);
+                }
+                $plainContent = trim(strip_tags($content));
+                $plainContent = (string) preg_replace('/\s+/', ' ', $plainContent);
+
+                if ($plainContent !== '') {
+                    $chunks[] = [
+                        'id' => $slug,
+                        'slug' => $slug,
+                        'title' => $title,
+                        'heading' => null,
+                        'content' => $plainContent,
+                        'anchor' => null,
+                    ];
+                }
+            }
+        }
+
+        // Now handle content starting from each heading
+        if ($nodes) {
+            foreach ($nodes as $index => $node) {
+                if (! ($node instanceof \DOMElement)) {
+                    continue;
+                }
+
+                $headingText = trim($node->textContent);
+                $headingId = $node->getAttribute('id');
+
+                $contentNodes = [];
+                $curr = $node->nextSibling;
+                while ($curr && ! in_array(strtolower($curr->nodeName), ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])) {
+                    $contentNodes[] = $curr;
+                    $curr = $curr->nextSibling;
+                }
+
+                $content = '';
+                foreach ($contentNodes as $cNode) {
+                    $content .= $dom->saveHTML($cNode);
+                }
+                $plainContent = trim(strip_tags($content));
+                $plainContent = (string) preg_replace('/\s+/', ' ', $plainContent);
+
+                // Even if content is empty (except for the heading itself), we index it
+                $chunks[] = [
+                    'id' => $slug.($headingId ? '#'.$headingId : '#'.($index + 1)),
+                    'slug' => $slug,
+                    'title' => $title,
+                    'heading' => $headingText,
+                    'content' => $plainContent,
+                    'anchor' => $headingId ?: null,
+                ];
+            }
+        }
+
+        return $chunks;
     }
 
     protected function markdownConverter(): MarkdownConverter

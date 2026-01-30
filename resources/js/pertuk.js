@@ -1,31 +1,4 @@
-import hljs from "highlight.js/lib/core";
 
-// Import only the languages you need to keep bundle size small
-import javascript from "highlight.js/lib/languages/javascript";
-import php from "highlight.js/lib/languages/php";
-import sql from "highlight.js/lib/languages/sql";
-import bash from "highlight.js/lib/languages/bash";
-import json from "highlight.js/lib/languages/json";
-import xml from "highlight.js/lib/languages/xml"; // For HTML/Blade
-import css from "highlight.js/lib/languages/css";
-import yaml from "highlight.js/lib/languages/yaml";
-import markdown from "highlight.js/lib/languages/markdown";
-
-// Register languages
-hljs.registerLanguage("javascript", javascript);
-hljs.registerLanguage("php", php);
-hljs.registerLanguage("sql", sql);
-hljs.registerLanguage("bash", bash);
-hljs.registerLanguage("shell", bash); // Alias for bash
-hljs.registerLanguage("json", json);
-hljs.registerLanguage("html", xml);
-hljs.registerLanguage("xml", xml);
-hljs.registerLanguage("blade", xml); // Use XML highlighting for Blade
-hljs.registerLanguage("css", css);
-hljs.registerLanguage("yaml", yaml);
-hljs.registerLanguage("yml", yaml); // Alias for yaml
-hljs.registerLanguage("markdown", markdown);
-hljs.registerLanguage("md", markdown); // Alias for markdown
 
 /**
  * Documentation JavaScript functionality
@@ -89,10 +62,7 @@ class DocsManager {
      * Initialize syntax highlighting
      */
     initSyntaxHighlighting() {
-        // Highlight all code blocks
-        document.querySelectorAll("pre code").forEach((block) => {
-            hljs.highlightElement(block);
-        });
+        // Syntax highlighting is now handled server-side by Shiki
 
         // Add copy buttons to code blocks
         this.addCopyButtons();

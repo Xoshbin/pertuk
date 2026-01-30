@@ -12,6 +12,7 @@ use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use League\CommonMark\MarkdownConverter;
+use Spatie\CommonMarkShikiHighlighter\HighlightCodeExtension;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
 
 class DocumentationService
@@ -229,6 +230,9 @@ class DocumentationService
         $env->addExtension(new CommonMarkCoreExtension);
         $env->addExtension(new GithubFlavoredMarkdownExtension);
 
+        // Register Shiki for syntax highlighting
+        $env->addExtension(new HighlightCodeExtension('github-dark'));
+
         // Register HeadingPermalinkExtension so its schema is available before
         // merging config. This prevents Nette/League config validation errors
         // when providing heading_permalink options.
@@ -330,7 +334,6 @@ class DocumentationService
                 // Clone node and remove any permalink anchors from the clone.
                 // cloneNode returns a DOMNode, but we know we're cloning an element.
                 /** @var \DOMElement $nodeClone */
-                $nodeClone = $nodeClone;
                 $anchors = $nodeClone->getElementsByTagName('a');
                 /** @var \DOMElement $a */
                 foreach ($anchors as $a) {
@@ -409,9 +412,7 @@ class DocumentationService
             return $tag;
         }, $html) ?? $html;
 
-        // Add highlight.js class to code blocks (append if class exists, otherwise add)
-        $html = preg_replace('/<pre><code\s+class=\"([^\"]*)\"/i', '<pre><code class=\"$1 hljs\"', $html) ?? $html;
-        $html = preg_replace('/<pre><code(?![^>]*class=)/i', '<pre><code class=\"hljs\"', $html) ?? $html;
+        // Note: Code block highlighting is now handled by the Shiki extension in markdownConverter()
 
         return $html;
     }

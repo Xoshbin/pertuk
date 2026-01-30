@@ -2,6 +2,11 @@
     /** @var string $html */
     $locale = $current_locale ?? app()->getLocale();
     $isRtl = in_array($locale, config('pertuk.rtl_locales', ['ar', 'ckb']));
+
+    $repo = config('pertuk.github_repo');
+    $branch = config('pertuk.github_branch', 'main');
+    $root = config('pertuk.root'); // e.g. /var/www/html/docs
+    $relativeRoot = \Illuminate\Support\Str::after($root, base_path() . DIRECTORY_SEPARATOR); // e.g. docs
 @endphp
 
 <x-pertuk::pertuk-layout :title="$title" :current-locale="$current_locale">
@@ -86,25 +91,27 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <a href="https://github.com/your-repo/edit/main/docs/{{ $slug }}.md" target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Edit this page
-                    </a>
+                    @if ($repo)
+                        <a href="https://github.com/{{ $repo }}/edit/{{ $branch }}/{{ $relativeRoot }}/{{ $slug }}.md"
+                            target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            {{ __('Edit this page') }}
+                        </a>
 
-                    <a href="https://github.com/your-repo/issues/new?title=Docs: {{ urlencode($title) }}"
-                        target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Report issue
-                    </a>
+                        <a href="https://github.com/{{ $repo }}/issues/new?title=Docs: {{ urlencode($title) }}"
+                            target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ __('Report issue') }}
+                        </a>
+                    @endif
                 </div>
             </div>
         </footer>

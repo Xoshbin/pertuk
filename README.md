@@ -23,6 +23,7 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 -   🧭 **Breadcrumbs**: Automatic breadcrumb navigation
 -   🏷️ **Front Matter Support**: YAML front matter for metadata
 -   💡 **Admonitions**: Support for tip, warning, and danger callouts
+-   🚀 **Pre-rendering**: Artisan command to pre-render documentation for maximum speed
 
 ## Configuration
 
@@ -91,6 +92,11 @@ npm install minisearch alpinejs @alpinejs/collapse
 
 ```bash
 php artisan vendor:publish --tag="pertuk-views"
+```
+
+7. (Optional) Pre-render documentation for performance:
+```bash
+php artisan pertuk:build
 ```
 
 ## Usage
@@ -198,6 +204,17 @@ docs/
 ├── getting-started.md       # English (default)
 ├── getting-started.ckb.md   # Kurdish
 └── getting-started.ar.md    # Arabic
+
+```
+
+### Performance & Deployment
+
+To ensure maximum performance in production, you can pre-render all documentation files into the cache. This eliminates the need for parsing Markdown on the first request.
+
+Run the following command during your deployment process:
+
+```bash
+php artisan pertuk:build
 ```
 
 ## Testing

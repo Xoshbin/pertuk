@@ -43,26 +43,7 @@ class DocumentationService
      */
     public function list(): array
     {
-        $files = collect(File::allFiles($this->root))
-            ->filter(fn ($file) => Str::endsWith($file->getFilename(), '.md'))
-            ->reject(function ($file) {
-                $relPath = Str::after($file->getPathname(), rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
-
-                // Check if filename is in exclude list
-                if (in_array($file->getFilename(), $this->exclude, true)) {
-                    return true;
-                }
-
-                // Check if any part of the path is in exclude list
-                foreach ($this->exclude as $excludePattern) {
-                    if (Str::contains($relPath, $excludePattern)) {
-                        return true;
-                    }
-                }
-
-                return false;
-            })
-            ->values();
+        $files = $this->getFiles();
 
         $currentLocale = app()->getLocale();
         $seenBaseSlugs = [];
@@ -102,7 +83,7 @@ class DocumentationService
 
             // If we haven't seen this base slug yet, or this is the preferred locale, add/replace it
             if (! isset($seenBaseSlugs[$baseSlug]) || $docLocale === $currentLocale) {
-                $seenBaseSlugs[$baseSlug] = $item;
+                $seenBaseSlugs[$baseSlug] = $item; // @phpstan-ignore-line (PHPStan doesn't like keys that look like integers if array is defined as list)
             }
         }
 
@@ -112,6 +93,51 @@ class DocumentationService
                 return [$item['slug'] => $item];
             })
             ->all();
+    }
+
+    /**
+     * Get all discovered slugs without locale filtering/grouping.
+     * Useful for cache warming (pre-rendering).
+     *
+     * @return array<int, string>
+     */
+    public function discoverAllSlugs(): array
+    {
+        return $this->getFiles()
+            ->map(function ($file) {
+                return $this->getSlugFromPath($file->getPathname());
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Get all documentation files respecting exclude rules.
+     *
+     * @return \Illuminate\Support\Collection<int, \Symfony\Component\Finder\SplFileInfo>
+     */
+    protected function getFiles(): \Illuminate\Support\Collection
+    {
+        return collect(File::allFiles($this->root))
+            ->filter(fn ($file) => Str::endsWith($file->getFilename(), '.md'))
+            ->reject(function ($file) {
+                $relPath = Str::after($file->getPathname(), rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
+
+                // Check if filename is in exclude list
+                if (in_array($file->getFilename(), $this->exclude, true)) {
+                    return true;
+                }
+
+                // Check if any part of the path is in exclude list
+                foreach ($this->exclude as $excludePattern) {
+                    if (Str::contains($relPath, $excludePattern)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            })
+            ->values();
     }
 
     /**
@@ -543,7 +569,7 @@ class DocumentationService
     /**
      * Convert a file path back to a slug
      */
-    protected function getSlugFromPath(string $path): string
+    public function getSlugFromPath(string $path): string
     {
         // Remove the root directory and .md extension
         $relativePath = Str::after($path, rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);

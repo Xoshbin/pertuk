@@ -16,6 +16,21 @@
     @apply opacity-70;
 }
 
+/* Table of Contents Styles */
+.docs-toc-link {
+    @apply block rounded-md px-3 py-1.5 text-sm transition-all duration-200;
+    @apply text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
+}
+
+.docs-toc-link.active {
+    @apply bg-orange-50 text-orange-700 font-medium dark:bg-orange-900/20 dark:text-orange-400;
+    @apply ring-1 ring-orange-200 dark:ring-orange-800/30;
+}
+
+[dir="rtl"] .docs-toc-link {
+    @apply text-right;
+}
+
 /* Custom Components: Tabs and Accordion */
 .docs-content x-pertuk-tabs {
     @apply block border border-gray-200 dark:border-gray-700 rounded-xl my-8 overflow-hidden bg-white dark:bg-gray-900 shadow-sm;

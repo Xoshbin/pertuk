@@ -357,7 +357,7 @@ class DocsManager {
     }
 
     /**
-     * Table of Contents active section highlighting
+     * Table of Contents active section highlighting using Intersection Observer
      */
     initTableOfContents() {
         const tocLinks = document.querySelectorAll("[data-toc-link]");
@@ -368,102 +368,90 @@ class DocsManager {
         );
         if (!headings.length) return;
 
-        let isScrolling = false;
-        let scrollTimeout;
+        // Use Intersection Observer to detect which heading is in view
+        const observerOptions = {
+            root: null,
+            rootMargin: "-100px 0px -70% 0px", // Trigger when heading is in the top 30% of the viewport
+            threshold: 0,
+        };
 
-        const updateActiveTocLink = () => {
-            if (isScrolling) return;
+        const headingStates = new Map();
 
-            const scrollY = window.scrollY;
-            const windowHeight = window.innerHeight;
-            const documentHeight = document.documentElement.scrollHeight;
+        const updateActiveLink = () => {
+            // Find headings that are "active" (intersecting)
+            const activeHeadings = headings.filter((h) =>
+                headingStates.get(h.id)
+            );
 
-            let activeHeading = null;
+            let currentId = null;
 
-            // If we're at the bottom of the page, highlight the last heading
-            if (scrollY + windowHeight >= documentHeight - 10) {
-                activeHeading = headings[headings.length - 1];
+            if (activeHeadings.length > 0) {
+                // If there are intersecting headings, pick the first one (highest in DOM)
+                currentId = activeHeadings[0].id;
             } else {
-                // Find the heading that's currently in view
-                for (let i = headings.length - 1; i >= 0; i--) {
-                    const heading = headings[i];
-                    const rect = heading.getBoundingClientRect();
-
-                    if (rect.top <= 100) {
-                        activeHeading = heading;
-                        break;
-                    }
+                // If no headings are intersecting, it might be because we're between headings
+                // Find the last heading that is above the viewport
+                const topHeadings = headings.filter(
+                    (h) => h.getBoundingClientRect().top < 100
+                );
+                if (topHeadings.length > 0) {
+                    currentId = topHeadings[topHeadings.length - 1].id;
                 }
             }
 
-            // Update TOC link styles
-            tocLinks.forEach((link) => {
-                const isActive =
-                    activeHeading &&
-                    link.getAttribute("data-toc-link") === activeHeading.id;
+            if (!currentId) return;
 
-                if (isActive) {
-                    link.classList.remove(
-                        "text-gray-600",
-                        "dark:text-gray-400"
-                    );
-                    link.classList.add(
-                        "bg-orange-50",
-                        "text-orange-700",
-                        "dark:bg-orange-900/20",
-                        "dark:text-orange-400"
-                    );
+            tocLinks.forEach((link) => {
+                const id = link.getAttribute("data-toc-link");
+                if (id === currentId) {
+                    link.classList.add("active");
                 } else {
-                    link.classList.remove(
-                        "bg-orange-50",
-                        "text-orange-700",
-                        "dark:bg-orange-900/20",
-                        "dark:text-orange-400"
-                    );
-                    link.classList.add("text-gray-600", "dark:text-gray-400");
+                    link.classList.remove("active");
                 }
             });
         };
 
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                headingStates.set(entry.target.id, entry.isIntersecting);
+            });
+            updateActiveLink();
+        }, observerOptions);
+
+        headings.forEach((heading) => observer.observe(heading));
+
         // Smooth scroll to heading when TOC link is clicked
         tocLinks.forEach((link) => {
-            link.addEventListener("click", function (e) {
+            link.addEventListener("click", (e) => {
                 e.preventDefault();
-                const targetId = this.getAttribute("data-toc-link");
+                const targetId = link.getAttribute("data-toc-link");
                 const targetElement = document.getElementById(targetId);
 
                 if (targetElement) {
-                    isScrolling = true;
+                    // Temporarily disconnect observer to prevent jumping highlights during smooth scroll
+                    // but actually most people prefer the highlight following the content.
+                    // We'll just rely on the smooth scroll and the observer.
 
-                    targetElement.scrollIntoView({
+                    const offset = 80; // Offset for fixed header if any
+                    const bodyRect = document.body.getBoundingClientRect().top;
+                    const elementRect =
+                        targetElement.getBoundingClientRect().top;
+                    const elementPosition = elementRect - bodyRect;
+                    const offsetPosition = elementPosition - offset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
                         behavior: "smooth",
-                        block: "start",
                     });
 
                     // Update URL hash
                     history.pushState(null, null, `#${targetId}`);
-
-                    // Reset scrolling flag after animation
-                    setTimeout(() => {
-                        isScrolling = false;
-                        updateActiveTocLink();
-                    }, 1000);
                 }
             });
         });
 
-        // Throttled scroll listener
-        window.addEventListener(
-            "scroll",
-            function () {
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(updateActiveTocLink, 50);
-            },
-            { passive: true }
-        );
-
-        // Initial call
-        updateActiveTocLink();
+        // Initial check in case we start at a hash
+        updateActiveLink();
     }
 
     /**

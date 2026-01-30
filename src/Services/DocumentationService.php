@@ -14,6 +14,7 @@ use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use League\CommonMark\MarkdownConverter;
 use Spatie\CommonMarkShikiHighlighter\HighlightCodeExtension;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
+use Xoshbin\Pertuk\Extensions\Admonition\AdmonitionExtension;
 
 class DocumentationService
 {
@@ -237,6 +238,9 @@ class DocumentationService
         // merging config. This prevents Nette/League config validation errors
         // when providing heading_permalink options.
         $env->addExtension(new HeadingPermalinkExtension);
+
+        // Register Admonition extension for ::: tip, ::: warning, ::: danger
+        $env->addExtension(new AdmonitionExtension);
 
         // Merge heading_permalink config after extensions have been added so the
         // HeadingPermalinkExtension can register its schema first.

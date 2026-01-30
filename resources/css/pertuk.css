@@ -4,8 +4,7 @@
 @source "../views/**/*.blade.php";
 @source "../js/**/*.js";
 
-@import 'highlight.js/styles/github.css' (prefers-color-scheme: light);
-@import 'highlight.js/styles/github-dark.css' (prefers-color-scheme: dark);
+@source "../js/**/*.js";
 
 /* Documentation-specific styles */
 .docs-prose a.heading-anchor {
@@ -62,7 +61,8 @@ html {
     @apply text-orange-600 dark:text-orange-400 font-medium hover:text-orange-700 dark:hover:text-orange-300 transition-colors;
 }
 
-.docs-content ul, .docs-content ol {
+.docs-content ul,
+.docs-content ol {
     @apply mb-4 ml-6;
 }
 
@@ -126,6 +126,61 @@ html {
     @apply bg-green-50 dark:bg-green-900/20 border-green-500 text-green-800 dark:text-green-200;
 }
 
+/* Admonitions (::: tip, ::: warning, ::: danger) */
+.docs-content .admonition {
+    @apply rounded-xl p-6 my-8 border-l-4 shadow-sm relative overflow-hidden;
+    @apply bg-white dark:bg-gray-900;
+}
+
+.docs-content .admonition::before {
+    @apply absolute top-6 left-6 text-xl font-bold font-mono opacity-20;
+    content: "";
+}
+
+.docs-content .admonition p:last-child {
+    @apply mb-0;
+}
+
+.docs-content .admonition.admonition-tip {
+    @apply border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20;
+}
+
+.docs-content .admonition.admonition-tip::after {
+    content: "TIP";
+    @apply absolute top-0 right-0 px-3 py-1 text-[10px] font-bold tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 rounded-bl-lg uppercase;
+}
+
+.docs-content .admonition.admonition-info,
+.docs-content .admonition.admonition-note {
+    @apply border-blue-500 bg-blue-50/50 dark:bg-blue-950/20;
+}
+
+.docs-content .admonition.admonition-info::after,
+.docs-content .admonition.admonition-note::after {
+    content: "INFO";
+    @apply absolute top-0 right-0 px-3 py-1 text-[10px] font-bold tracking-wider text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 rounded-bl-lg uppercase;
+}
+
+.docs-content .admonition.admonition-warning {
+    @apply border-amber-500 bg-amber-50/50 dark:bg-amber-950/20;
+}
+
+.docs-content .admonition.admonition-warning::after {
+    content: "WARNING";
+    @apply absolute top-0 right-0 px-3 py-1 text-[10px] font-bold tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 rounded-bl-lg uppercase;
+}
+
+.docs-content .admonition.admonition-danger,
+.docs-content .admonition.admonition-error {
+    @apply border-rose-500 bg-rose-50/50 dark:bg-rose-950/20;
+}
+
+.docs-content .admonition.admonition-danger::after,
+.docs-content .admonition.admonition-error::after {
+    content: "DANGER";
+    @apply absolute top-0 right-0 px-3 py-1 text-[10px] font-bold tracking-wider text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/40 rounded-bl-lg uppercase;
+}
+
 .docs-content pre[class*="language-"] {
     @apply relative;
 }
@@ -147,11 +202,11 @@ html {
     @apply overflow-x-auto;
 }
 
-.docs-content ul > li {
+.docs-content ul>li {
     @apply relative pl-6;
 }
 
-.docs-content ul > li::before {
+.docs-content ul>li::before {
     content: "•";
     @apply absolute left-0 text-orange-500 font-bold;
 }
@@ -247,19 +302,20 @@ html {
     @apply space-y-4;
 }
 
-.docs-loading .docs-content > * {
+.docs-loading .docs-content>* {
     @apply bg-gray-200 dark:bg-gray-700 rounded;
 }
 
-[dir="rtl"] .docs-content ul, [dir="rtl"] .docs-content ol {
+[dir="rtl"] .docs-content ul,
+[dir="rtl"] .docs-content ol {
     @apply mr-6 ml-0;
 }
 
-[dir="rtl"] .docs-content ul > li {
+[dir="rtl"] .docs-content ul>li {
     @apply pr-6 pl-0;
 }
 
-[dir="rtl"] .docs-content ul > li::before {
+[dir="rtl"] .docs-content ul>li::before {
     @apply right-0 left-auto;
 }
 
@@ -296,7 +352,12 @@ html {
     text-align: right;
 }
 
-[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6 {
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] h4,
+[dir="rtl"] h5,
+[dir="rtl"] h6 {
     text-align: right;
 }
 
@@ -323,6 +384,7 @@ html {
 [dir="rtl"] .breadcrumb-separator {
     transform: rotate(180deg);
 }
+
 [dir="rtl"] .docs-content {
     font-family: 'Segoe UI', Tahoma, Arial, Helvetica, sans-serif;
 }
@@ -452,4 +514,3 @@ html {
     text-align: right;
     font-family: 'Segoe UI', Tahoma, Arial, Helvetica, sans-serif;
 }
-

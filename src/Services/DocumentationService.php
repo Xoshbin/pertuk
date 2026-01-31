@@ -424,15 +424,16 @@ class DocumentationService
         $supported = (array) config('pertuk.supported_locales', ['en']);
 
         $labels = (array) config('pertuk.locale_labels', []);
-        $prefix = config('pertuk.route_prefix', 'docs');
+        $prefix = (string) config('pertuk.route_prefix', 'docs');
 
         $alternates = [];
         foreach ($supported as $loc) {
+            $loc = (string) $loc;
             $path = $this->resolvePath($loc, $slug);
             if ($path) {
                 $alternates[] = [
                     'locale' => $loc,
-                    'label' => $labels[$loc] ?? strtoupper($loc),
+                    'label' => (string) ($labels[$loc] ?? strtoupper($loc)),
                     'url' => url('/'.$prefix.'/'.($this->version ? $this->version.'/' : '').$loc.'/'.$slug),
                     'active' => $loc === $locale,
                 ];

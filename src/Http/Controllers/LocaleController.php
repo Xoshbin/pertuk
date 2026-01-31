@@ -42,7 +42,7 @@ class LocaleController extends Controller
         }
 
         // Standard redirection
-        $redirectUrl = $request->get('redirect') ?: $request->header('referer');
+        $redirectUrl = $request->input('redirect') ?: $request->header('referer');
 
         if ($redirectUrl && is_string($redirectUrl) && $this->isDocsUrl($redirectUrl)) {
             return redirect($this->getLocaleEquivalentUrl($redirectUrl, $locale));

@@ -4,58 +4,41 @@ use Illuminate\Support\Facades\Route;
 use Xoshbin\Pertuk\Http\Controllers\DocumentController;
 use Xoshbin\Pertuk\Http\Controllers\LocaleController;
 
-// Locale switching route (global, not prefixed) - supports both GET and POST
+// Locale switching route
 Route::match(['GET', 'POST'], '/locale/{locale}', [LocaleController::class, 'setLocale'])
     ->name('pertuk.locale.set')
     ->where('locale', implode('|', config('pertuk.supported_locales', ['en'])));
 
-$routePrefix = config('pertuk.route_prefix', 'docs');
-$middleware = config('pertuk.middleware', []);
-
-Route::prefix($routePrefix)
-    ->middleware($middleware)
+Route::prefix(config('pertuk.route_prefix', 'docs'))
+    ->middleware(config('pertuk.middleware', []))
     ->name('pertuk.docs.')
     ->group(function () {
-        $controller = DocumentController::class;
+        $locales = implode('|', (array) config('pertuk.supported_locales', ['en']));
+        $version = '(?!('.$locales.')$)[a-zA-Z0-9\.]+';
 
-        // Redirect root /docs to default locale
-        Route::get('/', function () {
-            $default = config('pertuk.default_locale', 'en');
-            // If default version is set, we might want to include it, but let's stick to locale/slug for now
-            // or redirect to the most "canonical" starting point.
-            // For now, mirroring existing behavior but cleaner.
+        Route::controller(DocumentController::class)->group(function () use ($locales, $version) {
+            // Root redirect
+            Route::get('/', 'root')->name('index');
 
-            return redirect()->route(config('pertuk.route_prefix', 'docs').'.show', [
-                'locale' => $default,
-                'slug' => 'index',
-            ]);
-        })->name('index');
-
-        $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
-        $localeConstraint = implode('|', $supportedLocales);
-        $versionConstraint = '(?!('.$localeConstraint.')$)[a-zA-Z0-9\.]+';
-
-        // Search routes
-        Route::controller($controller)->group(function () use ($localeConstraint, $versionConstraint) {
+            // Search index
             Route::get('/{locale}/index.json', 'searchIndex')
-                ->where('locale', $localeConstraint)
+                ->where('locale', $locales)
                 ->name('search.json');
 
             Route::get('/{version}/{locale}/index.json', 'searchIndex')
-                ->where('version', $versionConstraint)
-                ->where('locale', $localeConstraint)
+                ->where('version', $version)
+                ->where('locale', $locales)
                 ->name('version.search.json');
 
-            // Documentation routes
-            // Note: Order matters. Versioned route first.
+            // Documentation pages
             Route::get('/{version}/{locale}/{slug?}', 'show')
-                ->where('version', $versionConstraint)
-                ->where('locale', $localeConstraint)
+                ->where('version', $version)
+                ->where('locale', $locales)
                 ->where('slug', '.*')
                 ->name('version.show');
 
             Route::get('/{locale}/{slug?}', 'show')
-                ->where('locale', $localeConstraint)
+                ->where('locale', $locales)
                 ->where('slug', '.*')
                 ->name('show');
         });

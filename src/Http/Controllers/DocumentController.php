@@ -1,8 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Xoshbin\Pertuk\Http\Controllers;
 
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Contracts\View\View as ViewContract;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
@@ -11,7 +18,24 @@ use Xoshbin\Pertuk\Services\DocumentationService;
 
 class DocumentController extends Controller
 {
-    public function show(Request $request): \Illuminate\Http\Response|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+    /**
+     * Redirect root to default locale.
+     */
+    public function root(): RedirectResponse
+    {
+        $default = config('pertuk.default_locale', 'en');
+        $prefix = config('pertuk.route_prefix', 'docs');
+
+        return redirect()->route($prefix.'.show', [
+            'locale' => $default,
+            'slug' => 'index',
+        ]);
+    }
+
+    /**
+     * Show a documentation page.
+     */
+    public function show(Request $request): HttpResponse|ViewContract|RedirectResponse
     {
         // Session starting should ideally be in middleware, leaving it for now if middleware is minimal.
         if (! Session::isStarted()) {
@@ -22,8 +46,13 @@ class DocumentController extends Controller
         $locale = $request->route('locale');
         $slug = $request->route('slug') ?? 'index';
 
+        $locale = is_string($locale) ? $locale : 'en';
+        $slug = is_string($slug) ? $slug : 'index';
+        $version = is_string($version) ? $version : null;
+
         // Validation - 404 if locale not supported
-        abort_unless(in_array($locale, config('pertuk.supported_locales', ['en'])), 404);
+        $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
+        abort_unless(in_array($locale, $supportedLocales, true), 404);
 
         // Set application locale state
         App::setLocale($locale);
@@ -34,7 +63,7 @@ class DocumentController extends Controller
         // Attempt to retrieve the document
         try {
             $data = $docs->get($locale, $slug);
-        } catch (\Illuminate\Contracts\Filesystem\FileNotFoundException $e) {
+        } catch (FileNotFoundException) {
             // Fallback: If 'index' is requested but no physical index.md exists,
             // we render the index view with a list of all documents.
             if ($slug === 'index') {
@@ -52,15 +81,15 @@ class DocumentController extends Controller
 
         return $this->responseWithCacheHeaders(
             response()->view('pertuk::show', $viewData),
-            $data['mtime'],
-            $data['etag']
+            (int) $data['mtime'],
+            (string) $data['etag']
         );
     }
 
     /**
-     * Render the index page with grouped documentation items.
+     * Helper to show the index page when index.md is missing.
      */
-    protected function showIndex(DocumentationService $docs, string $locale): \Illuminate\Contracts\View\View
+    protected function showIndex(DocumentationService $docs, string $locale): ViewContract
     {
         $items = $docs->list($locale);
 
@@ -81,7 +110,7 @@ class DocumentController extends Controller
     /**
      * Attach HTTP caching headers to the response.
      */
-    protected function responseWithCacheHeaders(\Illuminate\Http\Response $response, int $mtime, string $etag): \Illuminate\Http\Response
+    protected function responseWithCacheHeaders(HttpResponse $response, int $mtime, string $etag): HttpResponse
     {
         $lastModified = gmdate('D, d M Y H:i:s', $mtime).' GMT';
 
@@ -102,9 +131,14 @@ class DocumentController extends Controller
         ]);
     }
 
-    public function searchIndex(Request $request, string $locale): \Illuminate\Http\JsonResponse
+    /**
+     * Search index endpoint.
+     */
+    public function searchIndex(Request $request, string $locale): JsonResponse
     {
         $version = $request->route('version');
+        $version = is_string($version) ? $version : null;
+
         $items = DocumentationService::make($version)->buildIndex($locale);
 
         return response()->json($items)->header('Content-Type', 'application/json');

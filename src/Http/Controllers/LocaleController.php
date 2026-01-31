@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Xoshbin\Pertuk\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
@@ -9,12 +11,10 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
+use Xoshbin\Pertuk\Services\DocumentationService;
 
 class LocaleController extends Controller
 {
-    /**
-     * Set the application locale and store it in session.
-     */
     /**
      * Set the application locale and store it in session.
      */
@@ -44,7 +44,7 @@ class LocaleController extends Controller
         // Standard redirection
         $redirectUrl = $request->get('redirect') ?: $request->header('referer');
 
-        if ($redirectUrl && $this->isDocsUrl($redirectUrl)) {
+        if ($redirectUrl && is_string($redirectUrl) && $this->isDocsUrl($redirectUrl)) {
             return redirect($this->getLocaleEquivalentUrl($redirectUrl, $locale));
         }
 
@@ -68,7 +68,7 @@ class LocaleController extends Controller
     protected function getLocaleEquivalentUrl(string $url, string $locale): string
     {
         $docsPrefix = config('pertuk.route_prefix', 'docs');
-        $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
+        $versions = DocumentationService::getAvailableVersions();
 
         // Parse path from URL
         $path = parse_url($url, PHP_URL_PATH) ?? '/';
@@ -77,10 +77,7 @@ class LocaleController extends Controller
         $segments = explode('/', $path);
 
         // Find where the docs prefix ends.
-        // We assume the prefix is at the start of the path relative to the domain root.
-        // If the app is in a subdirectory, this logic might need adjustment, but for now assuming standard setup.
-
-        $prefixSegments = explode('/', $docsPrefix);
+        $prefixSegments = explode('/', (string) $docsPrefix);
         $remainder = array_slice($segments, count($prefixSegments));
 
         if (empty($remainder)) {
@@ -90,7 +87,7 @@ class LocaleController extends Controller
         // Check structure: [version, locale, slug...] or [locale, slug...]
         $first = $remainder[0];
 
-        if (in_array($first, $versions)) {
+        if (in_array($first, $versions, true)) {
             // Versioned URL: /docs/{version}/{locale}/{slug}
             // Replace the second segment (locale)
             if (isset($remainder[1])) {

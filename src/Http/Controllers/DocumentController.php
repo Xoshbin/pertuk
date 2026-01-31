@@ -134,10 +134,13 @@ class DocumentController extends Controller
     /**
      * Search index endpoint.
      */
-    public function searchIndex(Request $request, string $locale): JsonResponse
+    public function searchIndex(Request $request): JsonResponse
     {
         $version = $request->route('version');
+        $locale = $request->route('locale');
+
         $version = is_string($version) ? $version : null;
+        $locale = is_string($locale) ? $locale : config('pertuk.default_locale', 'en');
 
         $items = DocumentationService::make($version)->buildIndex($locale);
 

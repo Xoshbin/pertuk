@@ -26,8 +26,20 @@
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
+                    @php
+                        $currentLocale = app()->getLocale();
+                        $currentVersion = $current_version ?? null;
+                        
+                        $searchIndexUrl = $currentVersion 
+                            ? route('pertuk.docs.version.search.json', ['version' => $currentVersion, 'locale' => $currentLocale])
+                            : route('pertuk.docs.search.json', ['locale' => $currentLocale]);
+                            
+                        $searchBaseUrl = url('/' . config('pertuk.route_prefix', 'docs') . ($currentVersion ? '/' . $currentVersion : '') . '/' . $currentLocale);
+                    @endphp
                     <input id="docs-search-input" type="search" placeholder="{{ __('Search documentation...') }}"
                         aria-label="{{ __('Search documentation') }}"
+                        data-index-url="{{ $searchIndexUrl }}"
+                        data-base-url="{{ $searchBaseUrl }}"
                         class="w-full rounded-lg border border-gray-300 bg-gray-50/50 ps-10 pe-4 py-2.5 text-sm placeholder-gray-500 outline-none transition-all duration-200 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder-gray-400 dark:focus:border-orange-400 dark:focus:bg-gray-900 dark:focus:ring-orange-400/20"
                         autocomplete="off" />
                     <div class="absolute inset-y-0 end-0 pe-3 flex items-center pointer-events-none">
@@ -45,6 +57,42 @@
 
             <!-- Navigation -->
             <div class="flex items-center gap-4">
+                 <!-- Context Switcher (Desktop) -->
+                 <div class="hidden lg:flex items-center gap-1 mr-4 border-r border-gray-200 dark:border-gray-800 pr-4">
+                    @php
+                       // Identify top-level contexts for navigation
+                       $navContexts = collect($items ?? [])->map(function($item) {
+                           $parts = explode('/', $item['slug']);
+                           return count($parts) > 1 ? $parts[0] : 'General';
+                       })->unique();
+                       
+                       // Current context
+                       $currentContext = 'General';
+                       if(isset($slug)) {
+                           $parts = explode('/', $slug);
+                           $currentContext = count($parts) > 1 ? $parts[0] : 'General';
+                       }
+                    @endphp
+                    
+                    @foreach($navContexts as $context)
+                        @if($context !== 'General')
+                             @php
+                                // Find the index page or first page of this context to link to
+                                $firstDoc = collect($items ?? [])->first(function($item) use ($context) {
+                                    return str_starts_with($item['slug'], $context . '/');
+                                });
+                                $linkUrl = $firstDoc 
+                                    ? route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => $firstDoc['slug']])
+                                    : '#';
+                             @endphp
+                             <a href="{{ $linkUrl }}" 
+                                class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $currentContext === $context ? 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800' }}">
+                                {{ ucfirst(str_replace('-', ' ', $context)) }}
+                             </a>
+                        @endif
+                    @endforeach
+                 </div>
+
                 <!-- Global Language Selector -->
                 <div class="hidden md:block">
                     <label for="global-lang-select" class="sr-only">{{ __('Language') }}</label>
@@ -68,7 +116,7 @@
                         $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
                         $currentVersion = $current_version ?? config('pertuk.default_version');
                         $currentLocale = app()->getLocale();
-                        $currentSlug = $slug ?? 'index';
+                        $currentSlug = $currentSlug ?? $slug ?? 'index';
                         $routePrefix = config('pertuk.route_prefix', 'docs');
                     @endphp
                     @if(count($versions) > 0)

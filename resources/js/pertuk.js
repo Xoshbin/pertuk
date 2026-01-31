@@ -256,7 +256,8 @@ class DocsManager {
         const ensureIndex = async () => {
             if (index) return index;
             try {
-                const res = await fetch("/docs/index.json", {
+                const indexUrl = input.getAttribute("data-index-url") || "/docs/index.json";
+                const res = await fetch(indexUrl, {
                     headers: { Accept: "application/json" },
                 });
                 const data = await res.json();
@@ -299,12 +300,14 @@ class DocsManager {
                 return;
             }
 
+            const baseUrl = input.getAttribute("data-base-url") || "/docs";
+
             results.innerHTML = items
                 .slice(0, 8)
                 .map((it) => {
                     const href = it.anchor
-                        ? `/docs/${it.slug}#${it.anchor}`
-                        : `/docs/${it.slug}`;
+                        ? `${baseUrl}/${it.slug}#${it.anchor}`
+                        : `${baseUrl}/${it.slug}`;
                     const displayTitle = it.heading
                         ? `${it.title} > ${it.heading}`
                         : it.title;

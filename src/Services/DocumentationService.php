@@ -250,6 +250,7 @@ class DocumentationService
     {
         $raw = File::get($path);
 
+        // @phpstan-ignore-next-line
         if (! is_string($raw)) {
             throw new \RuntimeException("Failed to read file: {$path}");
         }

@@ -29,7 +29,8 @@ it('caches parsed document content', function () {
     // Verify cache key exists
     $path = $this->getTestDocsPath().'/en/test-cache.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:en:'.md5($path.':'.$mtime);
+    $realPath = realpath($path) ?: $path;
+    $cacheKey = 'pertuk:docs:en:'.md5($realPath.':'.$mtime);
 
     expect(Cache::has($cacheKey))->toBeTrue();
 });
@@ -75,7 +76,8 @@ it('respects cache TTL configuration', function () {
     // Verify it's cached
     $path = $this->getTestDocsPath().'/en/test-ttl.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:en:'.md5($path.':'.$mtime);
+    $realPath = realpath($path) ?: $path;
+    $cacheKey = 'pertuk:docs:en:'.md5($realPath.':'.$mtime);
     expect(Cache::has($cacheKey))->toBeTrue();
 
     // Wait for TTL to expire
@@ -102,8 +104,11 @@ it('generates unique cache keys for different files', function () {
     $mtime1 = File::lastModified($path1);
     $mtime2 = File::lastModified($path2);
 
-    $cacheKey1 = 'pertuk:docs:en:'.md5($path1.':'.$mtime1);
-    $cacheKey2 = 'pertuk:docs:en:'.md5($path2.':'.$mtime2);
+    $realPath1 = realpath($path1) ?: $path1;
+    $realPath2 = realpath($path2) ?: $path2;
+
+    $cacheKey1 = 'pertuk:docs:en:'.md5($realPath1.':'.$mtime1);
+    $cacheKey2 = 'pertuk:docs:en:'.md5($realPath2.':'.$mtime2);
 
     expect($cacheKey1)->not->toBe($cacheKey2);
     expect(Cache::has($cacheKey1))->toBeTrue();
@@ -146,7 +151,8 @@ it('handles cache corruption gracefully', function () {
     // Manually corrupt the cache
     $path = $this->getTestDocsPath().'/en/cache-corruption.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:en:'.md5($path.':'.$mtime);
+    $realPath = realpath($path) ?: $path;
+    $cacheKey = 'pertuk:docs:en:'.md5($realPath.':'.$mtime);
 
     Cache::put($cacheKey, 'corrupted-data', 60);
 

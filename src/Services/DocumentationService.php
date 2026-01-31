@@ -217,7 +217,9 @@ class DocumentationService
         }
 
         $mtime = File::lastModified($path);
-        $cacheKey = 'pertuk:docs:'.$locale.':'.md5($path.':'.$mtime);
+        // Use realpath to ensure consistent cache keys regardless of symlinks/relative paths
+        $realPath = realpath($path) ?: $path;
+        $cacheKey = 'pertuk:docs:'.$locale.':'.md5($realPath.':'.$mtime);
 
         // Get cached value and validate it
         $cached = Cache::get($cacheKey);
@@ -247,6 +249,11 @@ class DocumentationService
     private function generateDocumentData(string $path, string $locale, string $slug, int $mtime): array
     {
         $raw = File::get($path);
+
+        if ($raw === false) {
+            throw new \RuntimeException("Failed to read file: {$path}");
+        }
+
         try {
             $front = YamlFrontMatter::parse($raw);
             $content = $front->body();

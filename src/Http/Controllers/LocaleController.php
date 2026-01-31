@@ -61,45 +61,42 @@ class LocaleController extends Controller
     /**
      * Get the equivalent URL for a docs page in the specified locale.
      */
+    /**
+     * Get the equivalent URL for a docs page in the specified locale.
+     */
     private function getLocaleEquivalentUrl(string $url, string $locale): string
     {
         // Get dynamic docs route prefix from config
         $docsPrefix = config('pertuk.route_prefix', 'docs');
-        $docsPrefixWithSlash = '/'.$docsPrefix.'/';
 
-        // Extract the slug from the URL
-        $path = parse_url($url, PHP_URL_PATH);
-        if (! $path || ! str_starts_with($path, $docsPrefixWithSlash)) {
-            return url($docsPrefix);
-        }
+        // Parse current path
+        $path = parse_url($url, PHP_URL_PATH) ?? '/';
+        $path = trim($path, '/'); // e.g. "docs/en/slug"
 
-        $slug = substr($path, strlen($docsPrefixWithSlash)); // Remove dynamic prefix
+        $prefixSegments = explode('/', $docsPrefix);
+        $pathSegments = explode('/', $path);
 
-        if (empty($slug)) {
-            return url($docsPrefix);
-        }
-
-        // Determine base slug by stripping any configured locale suffix except default
-        $supported = (array) config('pertuk.supported_locales', ['en']);
-        $default = config('pertuk.default_locale', 'en');
-        $baseSlug = $slug;
-
-        foreach ($supported as $loc) {
-            if ($loc === $default) {
-                continue;
-            }
-            if (str_ends_with($slug, '.'.$loc)) {
-                $baseSlug = substr($slug, 0, -1 * (strlen($loc) + 1));
-                break;
+        // Check if path starts with valid prefix
+        foreach ($prefixSegments as $i => $segment) {
+            if (($pathSegments[$i] ?? '') !== $segment) {
+                // Not a docs url
+                return url($docsPrefix.'/'.$locale);
             }
         }
 
-        // Build the new slug for the target locale
-        $newSlug = $baseSlug;
-        if ($locale !== $default) {
-            $newSlug .= '.'.$locale;
+        // Remove prefix segments
+        $remainder = array_slice($pathSegments, count($prefixSegments));
+        // $remainder[0] should be old locale
+        // $remainder[1..] is slug
+
+        if (empty($remainder)) {
+            return url($docsPrefix.'/'.$locale);
         }
 
-        return url($docsPrefix.'/'.$newSlug);
+        // Replace the locale segment (first part of remainder) with new locale
+        $remainder[0] = $locale;
+
+        // Rebuild path
+        return url($docsPrefix.'/'.implode('/', $remainder));
     }
 }

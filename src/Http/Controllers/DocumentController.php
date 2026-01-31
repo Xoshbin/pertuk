@@ -4,34 +4,40 @@ namespace Xoshbin\Pertuk\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Xoshbin\Pertuk\Services\DocumentationService;
 
 class DocumentController extends Controller
 {
-    public function index(): \Illuminate\Contracts\View\View
+    public function show(Request $request, string $locale, ?string $slug = null): \Illuminate\Http\Response|\Illuminate\Contracts\View\View
     {
         // Ensure session is started for CSRF token generation
         if (! Session::isStarted()) {
             Session::start();
         }
 
+        abort_unless(in_array($locale, config('pertuk.supported_locales', ['en'])), 404);
+
+        App::setLocale($locale);
+        Session::put('locale', $locale);
+
+        $slug = $slug ?? 'index';
+
         $docs = DocumentationService::make();
-        $items = $docs->list();
 
-        return View::make('pertuk::index', compact('items'));
-    }
+        try {
+            $data = $docs->get($locale, $slug);
+        } catch (\Illuminate\Contracts\Filesystem\FileNotFoundException $e) {
+            // If index definition is missing, list all docs (fallback behavior)
+            if ($slug === 'index') {
+                $items = $docs->list($locale);
 
-    public function show(Request $request, string $slug): \Illuminate\Http\Response|\Illuminate\Contracts\View\View
-    {
-        // Ensure session is started for CSRF token generation
-        if (! Session::isStarted()) {
-            Session::start();
+                return View::make('pertuk::index', compact('items'));
+            }
+            abort(404);
         }
-
-        $docs = DocumentationService::make();
-        $data = $docs->get($slug);
 
         $response = response()->view('pertuk::show', $data + ['slug' => $slug]);
 
@@ -54,9 +60,9 @@ class DocumentController extends Controller
         return $response;
     }
 
-    public function searchIndex(): \Illuminate\Http\JsonResponse
+    public function searchIndex(string $locale): \Illuminate\Http\JsonResponse
     {
-        $items = DocumentationService::make()->buildIndex();
+        $items = DocumentationService::make()->buildIndex($locale);
 
         return response()->json($items)->header('Content-Type', 'application/json');
     }

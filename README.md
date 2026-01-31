@@ -31,7 +31,8 @@ This is the contents of the published config file:
 
 ```php
 return [
-    // Root folder for documentation files
+    // Root folder for documentation files.
+    // Place markdown files under per-locale folders (e.g., docs/en/payments.md).
     'root' => base_path('docs'),
 
     // Default sort order when front matter 'order' is missing
@@ -84,9 +85,9 @@ php artisan vendor:publish --tag="pertuk-config"
 npm install minisearch alpinejs @alpinejs/collapse
 ```
 
-5. Create a `docs` directory and add a markdown file, e.g. `docs/getting-started.md`.
+5. Create a `docs/en` directory and add a markdown file, e.g. `docs/en/getting-started.md`.
 
-6. Visit your docs at `/docs` (or `/{route_prefix}` if you changed `pertuk.route_prefix`).
+6. Visit your docs at `/docs` (redirects to default locale) or `/docs/en` directly.
 
 -   **Customization**: Publish the views to customize the layout and markup:
 
@@ -103,18 +104,23 @@ php artisan pertuk:build
 
 ### Document Structure
 
+Files must be organized by locale subdirectory.
+
 ```
 docs/
-├── getting-started.md
-├── User Guide/
-│   ├── installation.md         # default (en)
-│   ├── installation.ckb.md     # Kurdish
-│   ├── installation.ar.md      # Arabic
-│   └── configuration.md
-├── Developer Guide/
-│   ├── api.md
-│   └── examples.md
-└── advanced.md
+├── en/                      # English (default)
+│   ├── getting-started.md
+│   ├── User Guide/
+│   │   ├── installation.md
+│   │   └── configuration.md
+│   └── advanced.md
+├── ckb/                     # Kurdish
+│   ├── getting-started.md
+│   └── User Guide/
+│       ├── installation.md
+│       └── configuration.md
+└── ar/                      # Arabic
+    └── getting-started.md
 ```
 
 ### Front Matter
@@ -197,14 +203,16 @@ This action cannot be undone.
 
 ### Multi-Language Support
 
-Create language-specific versions by adding locale suffixes:
+Docs must be placed in a subdirectory matching the locale code defined in `config/pertuk.php`. The structure is strict: `docs/{locale}/{slug}.md`.
 
 ```
 docs/
-├── getting-started.md       # English (default)
-├── getting-started.ckb.md   # Kurdish
-└── getting-started.ar.md    # Arabic
-
+├── en/
+│   └── intro.md
+├── ckb/
+│   └── intro.md
+└── ar/
+    └── intro.md
 ```
 
 ### Performance & Deployment

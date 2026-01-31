@@ -9,7 +9,7 @@
     $relativeRoot = \Illuminate\Support\Str::after($root, base_path() . DIRECTORY_SEPARATOR); // e.g. docs
 @endphp
 
-<x-pertuk::pertuk-layout :title="$title" :current-locale="$current_locale" :current-version="$current_version" :slug="$slug">
+<x-pertuk::pertuk-layout :title="$title" :current-locale="$current_locale" :current-version="$current_version" :slug="$slug" :items="$items">
     <x-slot:sidebar>
         @include('pertuk::components.sidebar', [
             'items' => $items,
@@ -17,7 +17,7 @@
         ])
     </x-slot:sidebar>
 
-    <article class="docs-prose prose prose-slate dark:prose-invert max-w-none {{ $isRtl ? 'text-right' : '' }}"
+    <article class="docs-prose prose prose-slate dark:prose-invert max-w-5xl {{ $isRtl ? 'text-right' : '' }}"
         dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
         <!-- Breadcrumb Navigation -->
         <nav class="mb-8" aria-label="Breadcrumb">

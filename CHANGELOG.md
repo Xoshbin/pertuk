@@ -2,6 +2,16 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.1.2 - 2026-01-31
+
+### What's Changed
+
+* feat: redesign documentation layout with scoped navigation and fluid grid by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/8
+* fix: dynamic search paths for localized and versioned docs by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/9
+* Develop by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/10
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/0.1.1...0.1.2
+
 ## v0.1.1 - 2026-01-31
 
 This update focuses on architectural excellence, long-term maintainability, and the introduction of a complete documentation versioning system.
@@ -11,12 +21,16 @@ This update focuses on architectural excellence, long-term maintainability, and 
 We have significantly refactored the core engine to align with the highest Laravel coding standards.
 
 - **Service Splitting**: The monolithic `DocumentationService` has been decomposed into smaller, single-responsibility services:
+  
   - `MarkdownRenderer`: Handles all Markdown to HTML conversion logic.
   - `ContentProcessor`: Manages file discovery, path resolution, and metadata extraction.
   
 - **Strict Typing**: Applied `declare(strict_types=1);` across all controllers and services to ensure type safety and code quality.
+  
 - **Controller Cleanup**: Controllers have been refactored to be "lean," moving business logic into the service layer and utilizing modern Laravel idioms.
+  
 - **Logic-Free Views**: Refactored Blade components and views to remove inline logic, relying on named routes and pre-processed data.
+  
 
 ### 🚀 New Features
 

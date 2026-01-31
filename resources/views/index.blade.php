@@ -8,7 +8,7 @@ $groupedItems = collect($items)->groupBy(function($item) {
 });
 @endphp
 
-<x-pertuk::pertuk-layout :title="'Documentation'">
+<x-pertuk::pertuk-layout :title="'Documentation'" :current-version="$current_version ?? null">
     <x-slot:sidebar>
         @include('pertuk::components.sidebar', ['items' => $items])
     </x-slot:sidebar>

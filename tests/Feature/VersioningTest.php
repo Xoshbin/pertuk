@@ -79,3 +79,54 @@ it('excludes versions based on configuration', function () {
     expect($versions)->not->toContain('v0.8-alpha');
     expect($versions)->not->toContain('archived');
 });
+
+it('passes resolved version to view for generic routes', function () {
+    // Create test content for latest version (v2.0)
+    $this->createTestMarkdownFile('test.md', '# v2.0', '', 'en', 'v2.0');
+    // Create older version to ensure we have multiple
+    $this->createTestMarkdownFile('test.md', '# v1.0', '', 'en', 'v1.0');
+
+    // Visit generic route which should resolve to v2.0
+    $response = $this->get('/docs/en/test');
+
+    $response->assertOk();
+    $response->assertViewHas('current_version', 'v2.0');
+});
+
+it('passes resolved version to view for generic routes even in fallback', function () {
+    // Create test content for latest version (v2.0)
+    // We create 'other.md' so that version v2.0 is discovered.
+    // We do NOT create 'index.md', so hitting /docs/en will trigger the FileNotFoundException -> fallback logic.
+    $this->createTestMarkdownFile('other.md', '# v2.0', '', 'en', 'v2.0');
+
+    // We also need another version to verify we are picking the latest
+    $this->createTestMarkdownFile('other.md', '# v1.0', '', 'en', 'v1.0');
+
+    // Visit generic route which defaults to index
+    $response = $this->get('/docs/en');
+
+    $response->assertOk();
+    // This view is returned in the fallback block
+    $response->assertViewIs('pertuk::index');
+    // This assertion should fail current implementation
+    $response->assertViewHas('current_version', 'v2.0');
+});
+
+it('marks the correct version as selected in the UI', function () {
+    $this->createTestMarkdownFile('test.md', '# v1.0', '', 'en', 'v1.0');
+    $this->createTestMarkdownFile('test.md', '# v2.0', '', 'en', 'v2.0'); // Latest
+
+    // Visit v1.0
+    $response = $this->get('/docs/v1.0/en/test');
+
+    $response->assertOk();
+
+    // Check v1.0 is selected
+    $content = $response->getContent();
+
+    $v1OptionPattern = '/<option[^>]*value="[^"]*\/v1\.0\/[^"]*"[^>]*selected[^>]*>/s';
+    $v2OptionPattern = '/<option[^>]*value="[^"]*\/v2\.0\/[^"]*"[^>]*selected[^>]*>/s';
+
+    expect(preg_match($v1OptionPattern, $content))->toBe(1, 'v1.0 should be selected');
+    expect(preg_match($v2OptionPattern, $content))->toBe(0, 'v2.0 should NOT be selected');
+});

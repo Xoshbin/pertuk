@@ -44,6 +44,11 @@ class DocumentationService
         return new self($root, $ttl, $version, $excludeDirectories);
     }
 
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
     /**
      * Automatically discover available version directories.
      *

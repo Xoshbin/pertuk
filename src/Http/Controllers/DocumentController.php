@@ -36,17 +36,19 @@ class DocumentController extends Controller
             if ($slug === 'index') {
                 $items = $docs->list($locale);
 
-                return View::make('pertuk::index', compact('items'));
+                return View::make('pertuk::index', compact('items'))
+                    ->with('current_version', $docs->getVersion());
             }
             abort(404);
         }
 
         $items = $docs->list($locale);
-        $response = response()->view('pertuk::show', $data + [
+        $items = $docs->list($locale);
+        $response = response()->view('pertuk::show', array_merge($data, [
             'slug' => $slug,
-            'current_version' => $version,
+            'current_version' => $docs->getVersion(),
             'items' => $items,
-        ]);
+        ]));
 
         // Caching headers
         $lastModified = gmdate('D, d M Y H:i:s', $data['mtime']).' GMT';

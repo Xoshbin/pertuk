@@ -15,100 +15,93 @@ class LocaleController extends Controller
     /**
      * Set the application locale and store it in session.
      */
+    /**
+     * Set the application locale and store it in session.
+     */
     public function setLocale(Request $request, string $locale): Response|JsonResponse|RedirectResponse
     {
-        // Validate locale against supported locales from config
         $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
 
         if (! in_array($locale, $supportedLocales, true)) {
             return response('Invalid locale', 400);
         }
 
-        // Store locale in session
         Session::put('locale', $locale);
-
-        // Set locale for current request
         App::setLocale($locale);
 
-        // Get dynamic docs route prefix from config
-        $docsPrefix = '/'.config('pertuk.route_prefix', 'docs').'/';
-
-        // If this is an AJAX request, return success with redirect URL if on docs page
+        // If AJAX, we might want to return the new URL for client-side redirection
         if ($request->ajax()) {
             $response = ['status' => 'success'];
-
-            // If the referer is a docs page, provide the equivalent URL in the new locale
             $referer = $request->header('referer');
-            if ($referer && str_contains($referer, $docsPrefix)) {
+
+            if ($referer && $this->isDocsUrl($referer)) {
                 $response['redirect_url'] = $this->getLocaleEquivalentUrl($referer, $locale);
             }
 
-            return response()->json($response, 200);
+            return response()->json($response);
         }
 
-        // For regular requests, redirect back to the specified URL or referer
-        $defaultDocsUrl = url(config('pertuk.route_prefix', 'docs'));
-        $redirectUrl = $request->get('redirect') ?: $request->header('referer') ?: $defaultDocsUrl;
+        // Standard redirection
+        $redirectUrl = $request->get('redirect') ?: $request->header('referer');
 
-        // If redirect URL is a docs page, get the locale-specific version
-        if (str_contains($redirectUrl, $docsPrefix)) {
-            $redirectUrl = $this->getLocaleEquivalentUrl($redirectUrl, $locale);
+        if ($redirectUrl && $this->isDocsUrl($redirectUrl)) {
+            return redirect($this->getLocaleEquivalentUrl($redirectUrl, $locale));
         }
 
-        return redirect($redirectUrl);
+        // Fallback to default docs index
+        return redirect()->route('pertuk.docs.show', ['locale' => $locale]);
+    }
+
+    /**
+     * Check if the given URL is part of the documentation.
+     */
+    protected function isDocsUrl(string $url): bool
+    {
+        $docsPrefix = config('pertuk.route_prefix', 'docs');
+
+        return str_contains($url, "/{$docsPrefix}/");
     }
 
     /**
      * Get the equivalent URL for a docs page in the specified locale.
      */
-    /**
-     * Get the equivalent URL for a docs page in the specified locale.
-     */
-    private function getLocaleEquivalentUrl(string $url, string $locale): string
+    protected function getLocaleEquivalentUrl(string $url, string $locale): string
     {
-        // Get dynamic docs route prefix from config
         $docsPrefix = config('pertuk.route_prefix', 'docs');
-        $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
-        // Use auto-discovered versions instead of config
         $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
 
-        // Parse current path
+        // Parse path from URL
         $path = parse_url($url, PHP_URL_PATH) ?? '/';
-        $path = trim($path, '/'); // e.g. "docs/en/slug" or "docs/v1.0/en/slug"
+        $path = trim($path, '/');
+
+        $segments = explode('/', $path);
+
+        // Find where the docs prefix ends.
+        // We assume the prefix is at the start of the path relative to the domain root.
+        // If the app is in a subdirectory, this logic might need adjustment, but for now assuming standard setup.
 
         $prefixSegments = explode('/', $docsPrefix);
-        $pathSegments = explode('/', $path);
-
-        // Check if path starts with valid prefix
-        foreach ($prefixSegments as $i => $segment) {
-            if (($pathSegments[$i] ?? '') !== $segment) {
-                // Not a docs url
-                return url($docsPrefix.'/'.$locale);
-            }
-        }
-
-        // Remove prefix segments
-        $remainder = array_slice($pathSegments, count($prefixSegments));
+        $remainder = array_slice($segments, count($prefixSegments));
 
         if (empty($remainder)) {
-            return url($docsPrefix.'/'.$locale);
+            return route('pertuk.docs.show', ['locale' => $locale]);
         }
 
-        // Try to identify if the first segment of remainder is a version or a locale
+        // Check structure: [version, locale, slug...] or [locale, slug...]
         $first = $remainder[0];
 
-        // If it's a version, then the locale should be the second segment
-        if (in_array($first, $versions) && isset($remainder[1])) {
-            $remainder[1] = $locale;
-        } elseif (in_array($first, $supportedLocales)) {
-            // It's a locale
-            $remainder[0] = $locale;
+        if (in_array($first, $versions)) {
+            // Versioned URL: /docs/{version}/{locale}/{slug}
+            // Replace the second segment (locale)
+            if (isset($remainder[1])) {
+                $remainder[1] = $locale;
+            }
         } else {
-            // Fallback: if we can't tell, just use the locale at the first position
+            // Unversioned URL: /docs/{locale}/{slug}
+            // Replace first segment
             $remainder[0] = $locale;
         }
 
-        // Rebuild path
         return url($docsPrefix.'/'.implode('/', $remainder));
     }
 }

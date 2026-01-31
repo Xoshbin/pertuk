@@ -1,13 +1,3 @@
-@php
-/** @var array<int,array{slug:string,title:string}> $items */
-
-// Group items by category for better organization
-$groupedItems = collect($items)->groupBy(function($item) {
-    $parts = explode('/', $item['slug']);
-    return count($parts) > 1 ? $parts[0] : 'Getting Started';
-});
-@endphp
-
 <x-pertuk::pertuk-layout :title="'Documentation'" :current-version="$current_version ?? null">
     <x-slot:sidebar>
         @include('pertuk::components.sidebar', ['items' => $items])
@@ -36,7 +26,7 @@ $groupedItems = collect($items)->groupBy(function($item) {
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Quick Start</h3>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">Get up and running with {{ config('app.name') }} in minutes.</p>
-                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . app()->getLocale() . '/getting-started') }}" class="inline-flex items-center gap-2 text-orange-600 dark:text-orange-400 font-medium hover:text-orange-700 dark:hover:text-orange-300">
+                <a href="{{ $current_version ? route('pertuk.docs.version.show', ['version' => $current_version, 'locale' => app()->getLocale(), 'slug' => 'getting-started']) : route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => 'getting-started']) }}" class="inline-flex items-center gap-2 text-orange-600 dark:text-orange-400 font-medium hover:text-orange-700 dark:hover:text-orange-300">
                     Get started
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -54,7 +44,7 @@ $groupedItems = collect($items)->groupBy(function($item) {
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">API Reference</h3>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">Complete API documentation and examples.</p>
-                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . app()->getLocale() . '/api') }}" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300">
+                <a href="{{ $current_version ? route('pertuk.docs.version.show', ['version' => $current_version, 'locale' => app()->getLocale(), 'slug' => 'api']) : route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => 'api']) }}" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300">
                     View API docs
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -72,7 +62,7 @@ $groupedItems = collect($items)->groupBy(function($item) {
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Examples</h3>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">Real-world examples and use cases.</p>
-                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . app()->getLocale() . '/examples') }}" class="inline-flex items-center gap-2 text-green-600 dark:text-green-400 font-medium hover:text-green-700 dark:hover:text-green-300">
+                <a href="{{ $current_version ? route('pertuk.docs.version.show', ['version' => $current_version, 'locale' => app()->getLocale(), 'slug' => 'examples']) : route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => 'examples']) }}" class="inline-flex items-center gap-2 text-green-600 dark:text-green-400 font-medium hover:text-green-700 dark:hover:text-green-300">
                     Browse examples
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -104,7 +94,7 @@ $groupedItems = collect($items)->groupBy(function($item) {
                             @endphp
 
                             <a
-                                href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . app()->getLocale() . '/' . $item['slug']) }}"
+                                href="{{ $current_version ? route('pertuk.docs.version.show', ['version' => $current_version, 'locale' => app()->getLocale(), 'slug' => $item['slug']]) : route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => $item['slug']]) }}"
                                 class="group block rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-all duration-200 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-md"
                             >
                                 <div class="flex items-start justify-between">

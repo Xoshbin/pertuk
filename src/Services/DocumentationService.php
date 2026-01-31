@@ -217,7 +217,9 @@ class DocumentationService
         }
 
         $mtime = File::lastModified($path);
-        $cacheKey = 'pertuk:docs:'.$locale.':'.md5($path.':'.$mtime);
+        // Use realpath to ensure consistent cache keys regardless of symlinks/relative paths
+        $realPath = realpath($path) ?: $path;
+        $cacheKey = 'pertuk:docs:'.$locale.':'.md5($realPath.':'.$mtime);
 
         // Get cached value and validate it
         $cached = Cache::get($cacheKey);
@@ -247,6 +249,12 @@ class DocumentationService
     private function generateDocumentData(string $path, string $locale, string $slug, int $mtime): array
     {
         $raw = File::get($path);
+
+        // @phpstan-ignore-next-line
+        if (! is_string($raw)) {
+            throw new \RuntimeException("Failed to read file: {$path}");
+        }
+
         try {
             $front = YamlFrontMatter::parse($raw);
             $content = $front->body();
@@ -424,15 +432,16 @@ class DocumentationService
         $supported = (array) config('pertuk.supported_locales', ['en']);
 
         $labels = (array) config('pertuk.locale_labels', []);
-        $prefix = config('pertuk.route_prefix', 'docs');
+        $prefix = (string) config('pertuk.route_prefix', 'docs');
 
         $alternates = [];
         foreach ($supported as $loc) {
+            $loc = (string) $loc;
             $path = $this->resolvePath($loc, $slug);
             if ($path) {
                 $alternates[] = [
                     'locale' => $loc,
-                    'label' => $labels[$loc] ?? strtoupper($loc),
+                    'label' => (string) ($labels[$loc] ?? strtoupper($loc)),
                     'url' => url('/'.$prefix.'/'.($this->version ? $this->version.'/' : '').$loc.'/'.$slug),
                     'active' => $loc === $locale,
                 ];

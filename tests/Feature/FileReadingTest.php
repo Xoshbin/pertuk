@@ -125,6 +125,7 @@ it('handles files with complex markdown features', function () {
 });
 
 it('excludes files based on configuration', function () {
+    config(['pertuk.exclude_directories' => ['.DS_Store', 'README.md']]);
     // Create files that should be excluded
     $this->createTestMarkdownFile('.DS_Store', 'This should be excluded');
     $this->createTestMarkdownFile('README.md', '# README\n\nThis should be excluded');

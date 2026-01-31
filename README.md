@@ -14,6 +14,7 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 -   📖 **Premium Markdown**: Full CommonMark and GitHub Flavored Markdown support
 -   🎨 **Shiki Syntax Highlighting**: Server-side, VS-Code quality syntax highlighting
 -   🌍 **Multi-Language Support**: Built-in support for English, Kurdish, and Arabic 
+-   🔢 **Versioning Support**: Full support for multiple documentation versions with a built-in version picker
 -   🔍 **Deep Local Search**: Full-content indexing via MiniSearch with relevancy scoring
 -   🧩 **Interactive Components**: Built-in support for Tabs and Accordions in Markdown
 -   🎨 **Modern UI**: Responsive design with interactive sidebar and dark mode
@@ -38,11 +39,17 @@ return [
     // Default sort order when front matter 'order' is missing
     'default_order' => 1000,
 
-    // Excluded files or folders (relative to root)
-    'exclude' => [
+    // Excluded files or folders (relative to root) for file listing
+    'exclude_directories' => [
         '.DS_Store',
         'README.md',
-        'Developers'
+        'Developers',
+    ],
+
+    // Excluded version directories (relative to root)
+    'exclude_versions' => [
+        'v0.x',
+        'beta',
     ],
 
     // Cache TTL (seconds) for parsed HTML & metadata
@@ -55,7 +62,7 @@ return [
     'route_prefix' => 'docs',
 
     // Route middleware
-    'middleware' => [],
+    'middleware' => ['web'],
 ];
 ```
 
@@ -102,26 +109,39 @@ php artisan pertuk:build
 
 ## Usage
 
-### Document Structure
+### Versioning & Directory Structure
 
-Files must be organized by locale subdirectory.
+Pertuk supports both **versioned** and **flat** directory structures. It automatically detects which one you are using.
 
-```
+#### Option 1: Versioned Structure (Recommended)
+Files are organized by version and then by locale: `docs/{version}/{locale}/{slug}.md`.
+
+```text
 docs/
-├── en/                      # English (default)
-│   ├── getting-started.md
-│   ├── User Guide/
-│   │   ├── installation.md
-│   │   └── configuration.md
-│   └── advanced.md
-├── ckb/                     # Kurdish
-│   ├── getting-started.md
-│   └── User Guide/
-│       ├── installation.md
-│       └── configuration.md
-└── ar/                      # Arabic
+├── v1.0/                      # Version 1.0
+│   ├── en/                    # English
+│   │   ├── getting-started.md
+│   │   └── sidebar.json       # Optional sidebar config
+│   └── ckb/                    # Kurdish (RTL)
+│       └── getting-started.md
+└── v2.0/                      # Version 2.0
+    └── en/
+        └── index.md
+```
+
+#### Option 2: Flat Structure (Simple)
+If you don't need multiple versions, you can place your locale folders directly in the root: `docs/{locale}/{slug}.md`.
+
+```text
+docs/
+├── en/                        # English
+│   └── getting-started.md
+└── ar/                        # Arabic (RTL)
     └── getting-started.md
 ```
+
+### Automatic Version Discovery
+You don't need to manually list versions in your config file. Pertuk will scan your `root` directory for any subfolders that contain a locale directory (like `en`, `ar`, or `ckb`) and automatically populate the version picker in the UI.
 
 ### Front Matter
 
@@ -203,16 +223,18 @@ This action cannot be undone.
 
 ### Multi-Language Support
 
-Docs must be placed in a subdirectory matching the locale code defined in `config/pertuk.php`. The structure is strict: `docs/{locale}/{slug}.md`.
+Pertuk supports multiple languages within each documentation version. Docs must be placed in a subdirectory matching the locale code defined in `config/pertuk.php` inside the version folder.
 
 ```
 docs/
-├── en/
-│   └── intro.md
-├── ckb/
-│   └── intro.md
-└── ar/
-    └── intro.md
+├── v1.0/
+│   ├── en/
+│   │   └── intro.md
+│   └── ckb/
+│       └── intro.md
+└── v0.9/
+    └── en/
+        └── intro.md
 ```
 
 ### Performance & Deployment

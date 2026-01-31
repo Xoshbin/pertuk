@@ -13,6 +13,7 @@ This release introduces a major overhaul to the documentation engine, focusing o
 * **Strict Multi-Language Architecture**: Pertuk now enforces a strict subdirectory structure for documentation (`docs/{locale}/...`). This ensures cleaner separation of languages and robust locale detection.
 * **Shiki Syntax Highlighting**: Replaced `highlight.js` with **Shiki** for superior, high-fidelity server-side syntax highlighting. Your code blocks now look exactly like they do in your IDE.
 * **Admonition Blocks**: Added native support for GitHub-flavored alerts and custom admonitions. You can now easily add `Note`, `Tip`, `Warning`, and `Danger` blocks to your markdown.
+* **Versioning Support**: Introduced full support for documentation versioning with dynamic discovery and fallback for flat structures.
 * **Static Build Command**: Introduced the `php artisan pertuk:build` command. This pre-renders your documentation to static HTML/Cache, significantly improving load times for end-users.
 
 #### 🛠 Improvements

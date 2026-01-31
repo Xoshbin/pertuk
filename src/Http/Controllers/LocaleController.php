@@ -68,10 +68,13 @@ class LocaleController extends Controller
     {
         // Get dynamic docs route prefix from config
         $docsPrefix = config('pertuk.route_prefix', 'docs');
+        $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
+        // Use auto-discovered versions instead of config
+        $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
 
         // Parse current path
         $path = parse_url($url, PHP_URL_PATH) ?? '/';
-        $path = trim($path, '/'); // e.g. "docs/en/slug"
+        $path = trim($path, '/'); // e.g. "docs/en/slug" or "docs/v1.0/en/slug"
 
         $prefixSegments = explode('/', $docsPrefix);
         $pathSegments = explode('/', $path);
@@ -86,15 +89,24 @@ class LocaleController extends Controller
 
         // Remove prefix segments
         $remainder = array_slice($pathSegments, count($prefixSegments));
-        // $remainder[0] should be old locale
-        // $remainder[1..] is slug
 
         if (empty($remainder)) {
             return url($docsPrefix.'/'.$locale);
         }
 
-        // Replace the locale segment (first part of remainder) with new locale
-        $remainder[0] = $locale;
+        // Try to identify if the first segment of remainder is a version or a locale
+        $first = $remainder[0];
+
+        // If it's a version, then the locale should be the second segment
+        if (in_array($first, $versions) && isset($remainder[1])) {
+            $remainder[1] = $locale;
+        } elseif (in_array($first, $supportedLocales)) {
+            // It's a locale
+            $remainder[0] = $locale;
+        } else {
+            // Fallback: if we can't tell, just use the locale at the first position
+            $remainder[0] = $locale;
+        }
 
         // Rebuild path
         return url($docsPrefix.'/'.implode('/', $remainder));

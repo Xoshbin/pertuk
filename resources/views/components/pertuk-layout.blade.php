@@ -1,8 +1,9 @@
-@props(['title' => null, 'currentLocale' => null])
+@props(['title' => null, 'currentLocale' => null, 'currentVersion' => null, 'slug' => null])
 
 @php
     $locale = $currentLocale ?? app()->getLocale();
     $isRtl = in_array($locale, config('pertuk.rtl_locales', ['ar', 'ckb']));
+    $current_version = $currentVersion; // Pass through to included header
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" class="h-full">

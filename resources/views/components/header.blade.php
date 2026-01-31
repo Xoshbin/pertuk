@@ -64,11 +64,24 @@
 
                 <!-- Version Selector -->
                 <div class="hidden md:block">
-                    <select
-                        class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800">
-                        <option>v1.0</option>
-                        <option>v0.9</option>
-                    </select>
+                    @php
+                        $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
+                        $currentVersion = $current_version ?? config('pertuk.default_version');
+                        $currentLocale = app()->getLocale();
+                        $currentSlug = $slug ?? 'index';
+                        $routePrefix = config('pertuk.route_prefix', 'docs');
+                    @endphp
+                    @if(count($versions) > 0)
+                        <select onchange="window.location.href = this.value"
+                            class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800">
+                            @foreach ($versions as $ver)
+                                <option value="{{ url('/' . $routePrefix . '/' . $ver . '/' . $currentLocale . '/' . $currentSlug) }}"
+                                    {{ $currentVersion === $ver ? 'selected' : '' }}>
+                                    {{ $ver }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
                 </div>
 
                 <!-- Theme Toggle -->

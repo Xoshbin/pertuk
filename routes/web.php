@@ -24,10 +24,31 @@ Route::prefix($routePrefix)
         })->name('index');
 
         // Search index per locale
-        Route::get('/{locale}/index.json', [DocumentController::class, 'searchIndex'])->name('index.json');
+        $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
+        $localeConstraint = implode('|', $supportedLocales);
 
-        // Main docs route
+        // Version constraint: Match anything that isn't a supported locale.
+        $versionConstraint = '(?!('.$localeConstraint.')$)[a-zA-Z0-9\.]+';
+
+        // Search index per locale
+        Route::get('/{locale}/index.json', [DocumentController::class, 'searchIndex'])
+            ->where('locale', $localeConstraint)
+            ->name('index.json');
+
+        Route::get('/{version}/{locale}/index.json', [DocumentController::class, 'searchIndex'])
+            ->where('version', $versionConstraint)
+            ->where('locale', $localeConstraint)
+            ->name('version.index.json');
+
+        // Main docs route (versioned)
+        Route::get('/{version}/{locale}/{slug?}', [DocumentController::class, 'show'])
+            ->where('version', $versionConstraint)
+            ->where('locale', $localeConstraint)
+            ->where('slug', '.*')
+            ->name('version.show');
+
         Route::get('/{locale}/{slug?}', [DocumentController::class, 'show'])
+            ->where('locale', $localeConstraint)
             ->where('slug', '.*')
             ->name('show');
     });

@@ -22,17 +22,71 @@ class DocumentationService
     public function __construct(
         protected string $root,
         protected int $ttl,
+        protected ?string $version = null,
         /** @var array<int,string> */
-        protected array $exclude = [],
+        protected array $excludeDirectories = [], // Renamed from $exclude
     ) {}
 
-    public static function make(): self
+    public static function make(?string $version = null): self
     {
         $root = config('pertuk.root', base_path('docs'));
         $ttl = (int) config('pertuk.cache_ttl', 3600);
-        $exclude = (array) config('pertuk.exclude', []);
+        $excludeDirectories = (array) config('pertuk.exclude_directories', []);
+        // 1. Explicit argument
+        // 2. Auto-discover default (latest) if not set
+        if (! $version) {
+            $available = self::getAvailableVersions();
+            if (! empty($available)) {
+                $version = $available[0];
+            }
+        }
 
-        return new self($root, $ttl, $exclude);
+        return new self($root, $ttl, $version, $excludeDirectories);
+    }
+
+    /**
+     * Automatically discover available version directories.
+     *
+     * @return array<int,string>
+     */
+    public static function getAvailableVersions(): array
+    {
+        $root = config('pertuk.root', base_path('docs'));
+        $excludeVersions = (array) config('pertuk.exclude_versions', []);
+
+        if (! File::exists($root)) {
+            return [];
+        }
+
+        $directories = File::directories($root);
+        $versions = [];
+
+        foreach ($directories as $directory) {
+            $name = basename($directory);
+            if (in_array($name, $excludeVersions)) {
+                continue;
+            }
+
+            // A valid version directory should contain at least one locale folder
+            $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
+            $hasLocale = false;
+            foreach ($supportedLocales as $locale) {
+                if (File::isDirectory($directory.DIRECTORY_SEPARATOR.$locale)) {
+                    $hasLocale = true;
+                    break;
+                }
+            }
+
+            if ($hasLocale) {
+                $versions[] = $name;
+            }
+        }
+
+        // Sort versions naturally (e.g., v10 > v2)
+        usort($versions, 'strnatcmp');
+
+        // Reverse to have latest version first
+        return array_reverse($versions);
     }
 
     /**
@@ -55,9 +109,7 @@ class DocumentationService
         $items = [];
 
         foreach ($files as $file) {
-            $localeRoot = rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$locale.DIRECTORY_SEPARATOR;
-            $relPath = Str::after($file->getPathname(), $localeRoot);
-            $slug = Str::of($relPath)->replaceLast('.md', '')->replace(DIRECTORY_SEPARATOR, '/')->toString();
+            $slug = $this->getSlugFromPath($file->getPathname());
 
             $parsed = $this->parseFrontMatter($file->getPathname());
             $title = $parsed['title'] ?? $this->inferTitle($file->getPathname());
@@ -107,10 +159,21 @@ class DocumentationService
      */
     protected function getFiles(string $locale): \Illuminate\Support\Collection
     {
-        $dir = $this->root.DIRECTORY_SEPARATOR.$locale;
+        $versionPart = $this->version ? $this->version.DIRECTORY_SEPARATOR : '';
+        $dir = $this->root.DIRECTORY_SEPARATOR.$versionPart.$locale;
 
         if (! File::exists($dir)) {
-            return collect([]);
+            // Fallback to non-versioned locale folder if versioned one doesn't exist
+            if ($this->version) {
+                $flatDir = $this->root.DIRECTORY_SEPARATOR.$locale;
+                if (File::exists($flatDir)) {
+                    $dir = $flatDir;
+                } else {
+                    return collect([]);
+                }
+            } else {
+                return collect([]);
+            }
         }
 
         return collect(File::allFiles($dir))
@@ -119,12 +182,12 @@ class DocumentationService
                 $relPath = Str::after($file->getPathname(), rtrim($dir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
 
                 // Check if filename is in exclude list
-                if (in_array($file->getFilename(), $this->exclude, true)) {
+                if (in_array($file->getFilename(), $this->excludeDirectories, true)) {
                     return true;
                 }
 
                 // Check if any part of the path is in exclude list
-                foreach ($this->exclude as $excludePattern) {
+                foreach ($this->excludeDirectories as $excludePattern) {
                     if (Str::contains($relPath, $excludePattern)) {
                         return true;
                     }
@@ -145,7 +208,7 @@ class DocumentationService
     /**
      * Get a single document by locale and slug.
      *
-     * @return array{title:string, html:string, toc:array<int,array{level:int,id:string,text:string}>, breadcrumbs:array<int,array{title:string,slug:?string}>, mtime:int, etag:string, alternates:array, current_locale:string}
+     * @return array{title:string, html:string, toc:array<int,array{level:int,id:string,text:string}>, breadcrumbs:array<int,array{title:string,slug:?string}>, mtime:int, etag:string, alternates:array, current_locale:string, current_version:?string}
      *
      * @throws FileNotFoundException
      */
@@ -229,6 +292,7 @@ class DocumentationService
             'etag' => $etag,
             'alternates' => $alternates,
             'current_locale' => $locale,
+            'current_version' => $this->version,
         ];
     }
 
@@ -548,7 +612,8 @@ class DocumentationService
 
     protected function resolvePath(string $locale, string $slug): ?string
     {
-        $path = $this->root.DIRECTORY_SEPARATOR.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
+        $versionPart = $this->version ? $this->version.DIRECTORY_SEPARATOR : '';
+        $path = $this->root.DIRECTORY_SEPARATOR.$versionPart.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
 
         if (! Str::endsWith($path, '.md')) {
             $path .= '.md';
@@ -556,6 +621,19 @@ class DocumentationService
 
         if (File::exists($path)) {
             return $path;
+        }
+
+        // Fallback to non-versioned path if versioned one doesn't exist
+        // This maintains backward compatibility for existing "flat" documentation
+        if ($this->version) {
+            $flatPath = $this->root.DIRECTORY_SEPARATOR.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
+            if (! Str::endsWith($flatPath, '.md')) {
+                $flatPath .= '.md';
+            }
+
+            if (File::exists($flatPath)) {
+                return $flatPath;
+            }
         }
 
         return null;
@@ -566,22 +644,26 @@ class DocumentationService
      */
     public function getSlugFromPath(string $path): string
     {
-        // Path is like /.../docs/en/slug.md
-        // We want 'slug'
+        $root = rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        $rel = Str::after($path, $root);
+        // $rel is "v1.0/en/slug.md" or "en/slug.md"
 
-        // Remove root and extension
-        $rel = Str::after($path, rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
-        // $rel is "en/slug"
+        $parts = explode(DIRECTORY_SEPARATOR, $rel);
 
-        $parts = explode(DIRECTORY_SEPARATOR, $rel, 2);
-        if (count($parts) === 2) {
-            $inner = $parts[1];
-
-            return Str::beforeLast(str_replace(DIRECTORY_SEPARATOR, '/', $inner), '.md');
+        // Check if first part is a version
+        $versions = self::getAvailableVersions();
+        if (count($parts) > 2 && in_array($parts[0], $versions)) {
+            // It's versioned, skip version and locale
+            return Str::beforeLast(implode('/', array_slice($parts, 2)), '.md');
         }
 
-        // Fallback for flat structure if ever
-        return Str::beforeLast(str_replace(DIRECTORY_SEPARATOR, '/', $rel), '.md');
+        // It's likely flat or first part is locale
+        if (count($parts) > 1) {
+            // Skip locale
+            return Str::beforeLast(implode('/', array_slice($parts, 1)), '.md');
+        }
+
+        return Str::beforeLast($rel, '.md');
     }
 
     protected function resolveRelativeDocLink(string $href, string $currentSlug, string $locale): string
@@ -594,7 +676,7 @@ class DocumentationService
         }
         $slug = trim($currentDir ? ($currentDir.'/'.$target) : $target, '/');
 
-        return url('/'.config('pertuk.route_prefix', 'docs').'/'.$locale.'/'.$slug);
+        return url('/'.config('pertuk.route_prefix', 'docs').'/'.($this->version ? $this->version.'/' : '').$locale.'/'.$slug);
     }
 
     /**
@@ -617,7 +699,7 @@ class DocumentationService
                 $alternates[] = [
                     'locale' => $loc,
                     'label' => $labels[$loc] ?? strtoupper($loc),
-                    'url' => url('/'.$prefix.'/'.$loc.'/'.$slug),
+                    'url' => url('/'.$prefix.'/'.($this->version ? $this->version.'/' : '').$loc.'/'.$slug),
                     'active' => $loc === $locale,
                 ];
             }

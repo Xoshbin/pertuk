@@ -11,21 +11,23 @@ use Xoshbin\Pertuk\Services\DocumentationService;
 
 class DocumentController extends Controller
 {
-    public function show(Request $request, string $locale, ?string $slug = null): \Illuminate\Http\Response|\Illuminate\Contracts\View\View
+    public function show(Request $request): \Illuminate\Http\Response|\Illuminate\Contracts\View\View
     {
         // Ensure session is started for CSRF token generation
         if (! Session::isStarted()) {
             Session::start();
         }
 
+        $version = $request->route('version');
+        $locale = $request->route('locale');
+        $slug = $request->route('slug') ?? 'index';
+
         abort_unless(in_array($locale, config('pertuk.supported_locales', ['en'])), 404);
 
         App::setLocale($locale);
         Session::put('locale', $locale);
 
-        $slug = $slug ?? 'index';
-
-        $docs = DocumentationService::make();
+        $docs = DocumentationService::make($version);
 
         try {
             $data = $docs->get($locale, $slug);
@@ -39,7 +41,12 @@ class DocumentController extends Controller
             abort(404);
         }
 
-        $response = response()->view('pertuk::show', $data + ['slug' => $slug]);
+        $items = $docs->list($locale);
+        $response = response()->view('pertuk::show', $data + [
+            'slug' => $slug,
+            'current_version' => $version,
+            'items' => $items,
+        ]);
 
         // Caching headers
         $lastModified = gmdate('D, d M Y H:i:s', $data['mtime']).' GMT';
@@ -60,9 +67,10 @@ class DocumentController extends Controller
         return $response;
     }
 
-    public function searchIndex(string $locale): \Illuminate\Http\JsonResponse
+    public function searchIndex(Request $request, string $locale): \Illuminate\Http\JsonResponse
     {
-        $items = DocumentationService::make()->buildIndex($locale);
+        $version = $request->route('version');
+        $items = DocumentationService::make($version)->buildIndex($locale);
 
         return response()->json($items)->header('Content-Type', 'application/json');
     }

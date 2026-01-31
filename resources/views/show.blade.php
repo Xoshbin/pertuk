@@ -26,7 +26,7 @@
                     @foreach (array_reverse($breadcrumbs) as $crumb)
                         <li class="flex items-center">
                             @if ($crumb['slug'])
-                                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . $crumb['slug']) }}"
+                                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . $locale . '/' . $crumb['slug']) }}"
                                     class="font-medium transition-colors hover:text-gray-700 dark:hover:text-gray-300">
                                     {{ $crumb['title'] }}
                                 </a>
@@ -47,7 +47,7 @@
                     @foreach ($breadcrumbs as $crumb)
                         <li class="flex items-center">
                             @if ($crumb['slug'])
-                                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . $crumb['slug']) }}"
+                                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . $locale . '/' . $crumb['slug']) }}"
                                     class="font-medium transition-colors hover:text-gray-700 dark:hover:text-gray-300">
                                     {{ $crumb['title'] }}
                                 </a>
@@ -92,7 +92,7 @@
 
                 <div class="flex items-center gap-4">
                     @if ($repo)
-                        <a href="https://github.com/{{ $repo }}/edit/{{ $branch }}/{{ $relativeRoot }}/{{ $slug }}.md"
+                        <a href="https://github.com/{{ $repo }}/edit/{{ $branch }}/{{ $relativeRoot }}/{{ $locale }}/{{ $slug }}.md"
                             target="_blank" rel="noopener noreferrer"
                             class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

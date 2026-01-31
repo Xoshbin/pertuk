@@ -15,7 +15,7 @@ class BuildDocumentation extends Command
     {
         $this->info('Starting documentation build...');
 
-        $slugs = $docs->discoverAllSlugs();
+        $slugs = $docs->discoverAll();
         $count = count($slugs);
 
         $this->info("Found {$count} documentation files.");
@@ -23,12 +23,12 @@ class BuildDocumentation extends Command
         $bar = $this->output->createProgressBar($count);
         $bar->start();
 
-        foreach ($slugs as $slug) {
+        foreach ($slugs as $item) {
             try {
-                $docs->get($slug);
+                $docs->get($item['locale'], $item['slug']);
             } catch (\Exception $e) {
                 $this->newLine();
-                $this->error("Failed to build slug: {$slug} - ".$e->getMessage());
+                $this->error("Failed to build {$item['locale']}/{$item['slug']}: ".$e->getMessage());
             }
             $bar->advance();
         }

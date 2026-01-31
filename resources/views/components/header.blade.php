@@ -7,7 +7,7 @@
         <div class="flex h-16 items-center justify-between">
             <!-- Logo -->
             <div class="flex items-center gap-8">
-                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs')) }}"
+                <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . app()->getLocale()) }}"
                     class="flex items-center gap-3 text-gray-900 dark:text-white transition-colors hover:text-orange-600 dark:hover:text-orange-400">
                     <div
                         class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600 text-white font-bold text-sm shadow-sm">

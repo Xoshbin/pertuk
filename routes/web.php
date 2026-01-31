@@ -4,30 +4,42 @@ use Illuminate\Support\Facades\Route;
 use Xoshbin\Pertuk\Http\Controllers\DocumentController;
 use Xoshbin\Pertuk\Http\Controllers\LocaleController;
 
-// Locale switching route (global, not prefixed) - supports both GET and POST
+// Locale switching route
 Route::match(['GET', 'POST'], '/locale/{locale}', [LocaleController::class, 'setLocale'])
-    ->name('locale.set')
+    ->name('pertuk.locale.set')
     ->where('locale', implode('|', config('pertuk.supported_locales', ['en'])));
 
-$routePrefix = config('pertuk.route_prefix', 'docs');
-$middleware = config('pertuk.middleware', []);
-
-Route::prefix($routePrefix)
-    ->middleware($middleware)
-    ->name($routePrefix.'.')
+Route::prefix(config('pertuk.route_prefix', 'docs'))
+    ->middleware(config('pertuk.middleware', []))
+    ->name('pertuk.docs.')
     ->group(function () {
-        // Redirect root /docs to default locale
-        Route::get('/', function () {
-            $default = config('pertuk.default_locale', 'en');
+        $locales = implode('|', (array) config('pertuk.supported_locales', ['en']));
+        $version = '(?!('.$locales.')$)[a-zA-Z0-9\.]+';
 
-            return redirect()->route(config('pertuk.route_prefix', 'docs').'.show', ['locale' => $default, 'slug' => 'index']);
-        })->name('index');
+        Route::controller(DocumentController::class)->group(function () use ($locales, $version) {
+            // Root redirect
+            Route::get('/', 'root')->name('index');
 
-        // Search index per locale
-        Route::get('/{locale}/index.json', [DocumentController::class, 'searchIndex'])->name('index.json');
+            // Search index
+            Route::get('/{locale}/index.json', 'searchIndex')
+                ->where('locale', $locales)
+                ->name('search.json');
 
-        // Main docs route
-        Route::get('/{locale}/{slug?}', [DocumentController::class, 'show'])
-            ->where('slug', '.*')
-            ->name('show');
+            Route::get('/{version}/{locale}/index.json', 'searchIndex')
+                ->where('version', $version)
+                ->where('locale', $locales)
+                ->name('version.search.json');
+
+            // Documentation pages
+            Route::get('/{version}/{locale}/{slug?}', 'show')
+                ->where('version', $version)
+                ->where('locale', $locales)
+                ->where('slug', '.*')
+                ->name('version.show');
+
+            Route::get('/{locale}/{slug?}', 'show')
+                ->where('locale', $locales)
+                ->where('slug', '.*')
+                ->name('show');
+        });
     });

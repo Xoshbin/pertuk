@@ -9,8 +9,15 @@ return [
     // Default sort order when front matter 'order' is missing.
     'default_order' => 1000,
 
-    // Excluded files or folders (relative to root).
-    'exclude' => [
+    // Excluded files or folders (relative to root) for file listing
+    'exclude_directories' => [
+        '.DS_Store',
+        'README.md',
+        'Developers',
+    ],
+
+    // Excluded version directories
+    'exclude_versions' => [
         '.DS_Store',
         'README.md',
         'Developers',

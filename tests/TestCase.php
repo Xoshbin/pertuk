@@ -95,12 +95,16 @@ class TestCase extends Orchestra
         }
     }
 
-    protected function createTestMarkdownFile(string $filename, string $content, string $subdirectory = '', string $locale = 'en'): string
+    protected function createTestMarkdownFile(string $filename, string $content, string $subdirectory = '', string $locale = 'en', ?string $version = null): string
     {
         $docsPath = $this->getTestDocsPath();
 
-        // Ensure path includes locale
-        $targetPath = $docsPath.'/'.$locale;
+        // Ensure path includes version if provided
+        if ($version) {
+            $targetPath = $docsPath.'/'.$version.'/'.$locale;
+        } else {
+            $targetPath = $docsPath.'/'.$locale;
+        }
 
         // If subdirectory is provided, append it
         if ($subdirectory) {

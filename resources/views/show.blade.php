@@ -9,10 +9,10 @@
     $relativeRoot = \Illuminate\Support\Str::after($root, base_path() . DIRECTORY_SEPARATOR); // e.g. docs
 @endphp
 
-<x-pertuk::pertuk-layout :title="$title" :current-locale="$current_locale">
+<x-pertuk::pertuk-layout :title="$title" :current-locale="$current_locale" :current-version="$current_version" :slug="$slug">
     <x-slot:sidebar>
         @include('pertuk::components.sidebar', [
-            'items' => \Xoshbin\Pertuk\Services\DocumentationService::make()->list(),
+            'items' => $items,
             'active' => $slug ?? null,
         ])
     </x-slot:sidebar>

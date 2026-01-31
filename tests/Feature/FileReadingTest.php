@@ -156,7 +156,7 @@ it('handles file reading errors gracefully', function () {
     $filePath = $this->createTestMarkdownFile('test-permissions.md', "# Test\n\nContent");
 
     // Make file unreadable (this might not work on all systems)
-    if (chmod($filePath, 0000)) {
+    if (chmod($filePath, 0000) && ! is_readable($filePath)) {
         $service = DocumentationService::make();
 
         // Should handle the error gracefully
@@ -166,8 +166,8 @@ it('handles file reading errors gracefully', function () {
         // Restore permissions for cleanup
         chmod($filePath, 0644);
     } else {
-        // Skip test if we can't change permissions
-        $this->markTestSkipped('Cannot change file permissions on this system');
+        // Skip test if we can't change permissions or it's still readable (e.g. root)
+        $this->markTestSkipped('Cannot make file unreadable on this system');
     }
 });
 

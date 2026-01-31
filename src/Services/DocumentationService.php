@@ -250,7 +250,7 @@ class DocumentationService
     {
         $raw = File::get($path);
 
-        if ($raw === false) {
+        if (! is_string($raw)) {
             throw new \RuntimeException("Failed to read file: {$path}");
         }
 

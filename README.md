@@ -11,15 +11,19 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 
 ## Features
 
--   📖 **Markdown Processing**: Full CommonMark and GitHub Flavored Markdown support
+-   📖 **Premium Markdown**: Full CommonMark and GitHub Flavored Markdown support
+-   🎨 **Shiki Syntax Highlighting**: Server-side, VS-Code quality syntax highlighting
 -   🌍 **Multi-Language Support**: Built-in support for English, Kurdish, and Arabic 
--   🔍 **Search Functionality**: Built-in search with JSON index
--   🎨 **Beautiful UI**: Responsive design with dark mode support
+-   🔍 **Deep Local Search**: Full-content indexing via MiniSearch with relevancy scoring
+-   🧩 **Interactive Components**: Built-in support for Tabs and Accordions in Markdown
+-   🎨 **Modern UI**: Responsive design with interactive sidebar and dark mode
 -   📱 **Mobile Friendly**: Optimized for all device sizes
 -   🗂️ **Auto Table of Contents**: Automatic TOC generation from headings
--   💾 **Caching**: Intelligent caching for performance
+-   💾 **Intelligent Caching**: High-performance document rendering and caching
 -   🧭 **Breadcrumbs**: Automatic breadcrumb navigation
 -   🏷️ **Front Matter Support**: YAML front matter for metadata
+-   💡 **Admonitions**: Support for tip, warning, and danger callouts
+-   🚀 **Pre-rendering**: Artisan command to pre-render documentation for maximum speed
 
 ## Configuration
 
@@ -27,7 +31,8 @@ This is the contents of the published config file:
 
 ```php
 return [
-    // Root folder for documentation files
+    // Root folder for documentation files.
+    // Place markdown files under per-locale folders (e.g., docs/en/payments.md).
     'root' => base_path('docs'),
 
     // Default sort order when front matter 'order' is missing
@@ -62,38 +67,60 @@ return [
 composer require xoshbin/pertuk
 ```
 
-2. (Optional) Publish the config:
+2. Publish the assets (JS and CSS):
+
+```bash
+php artisan vendor:publish --tag="pertuk-assets"
+```
+
+3. (Optional) Publish the config:
 
 ```bash
 php artisan vendor:publish --tag="pertuk-config"
 ```
 
-3. Create a `docs` directory and add a markdown file, e.g. `docs/getting-started.md`.
+4. Ensure you have the frontend dependencies installed if you are building assets yourself:
 
-4. Visit your docs at `/docs` (or `/{route_prefix}` if you changed `pertuk.route_prefix`).
+```bash
+npm install minisearch alpinejs @alpinejs/collapse
+```
 
--   Optional: publish the views to customize the layout and markup:
+5. Create a `docs/en` directory and add a markdown file, e.g. `docs/en/getting-started.md`.
+
+6. Visit your docs at `/docs` (redirects to default locale) or `/docs/en` directly.
+
+-   **Customization**: Publish the views to customize the layout and markup:
 
 ```bash
 php artisan vendor:publish --tag="pertuk-views"
+```
+
+7. (Optional) Pre-render documentation for performance:
+```bash
+php artisan pertuk:build
 ```
 
 ## Usage
 
 ### Document Structure
 
+Files must be organized by locale subdirectory.
+
 ```
 docs/
-├── getting-started.md
-├── User Guide/
-│   ├── installation.md         # default (en)
-│   ├── installation.ckb.md     # Kurdish
-│   ├── installation.ar.md      # Arabic
-│   └── configuration.md
-├── Developer Guide/
-│   ├── api.md
-│   └── examples.md
-└── advanced.md
+├── en/                      # English (default)
+│   ├── getting-started.md
+│   ├── User Guide/
+│   │   ├── installation.md
+│   │   └── configuration.md
+│   └── advanced.md
+├── ckb/                     # Kurdish
+│   ├── getting-started.md
+│   └── User Guide/
+│       ├── installation.md
+│       └── configuration.md
+└── ar/                      # Arabic
+    └── getting-started.md
 ```
 
 ### Front Matter
@@ -110,15 +137,92 @@ order: 1
 Your markdown content here...
 ```
 
+### Interactive Components (Alpine.js)
+
+Pertuk includes built-in interactive components powered by Alpine.js. These can be used directly in your Markdown files.
+
+#### Tabs
+
+Use tabs to group related content, like code examples in different languages.
+
+```html
+<x-pertuk-tabs>
+<x-pertuk-tab name="PHP">
+
+```php
+echo "Hello World";
+```
+
+</x-pertuk-tab>
+<x-pertuk-tab name="JS">
+
+```javascript
+console.log("Hello World");
+```
+
+</x-pertuk-tab>
+</x-pertuk-tabs>
+```
+
+#### Accordion
+
+Use accordions for collapsible sections like FAQs.
+
+```html
+<x-pertuk-accordion>
+<x-pertuk-accordion-item title="Can I customize the design?">
+
+Yes! You can publish the views and CSS to match your brand's identity.
+
+</x-pertuk-accordion-item>
+<x-pertuk-accordion-item title="What about performance?">
+
+Pertuk uses intelligent caching and server-side rendering for lightning-fast speeds.
+
+</x-pertuk-accordion-item>
+</x-pertuk-accordion>
+```
+
+### Admonitions
+
+Use special blocks for callouts:
+
+```markdown
+::: tip
+This is a helpful tip.
+:::
+
+::: warning
+Be careful with this setting.
+:::
+
+::: danger
+This action cannot be undone.
+:::
+```
+
 ### Multi-Language Support
 
-Create language-specific versions by adding locale suffixes:
+Docs must be placed in a subdirectory matching the locale code defined in `config/pertuk.php`. The structure is strict: `docs/{locale}/{slug}.md`.
 
 ```
 docs/
-├── getting-started.md       # English (default)
-├── getting-started.ckb.md   # Kurdish
-└── getting-started.ar.md    # Arabic
+├── en/
+│   └── intro.md
+├── ckb/
+│   └── intro.md
+└── ar/
+    └── intro.md
+```
+
+### Performance & Deployment
+
+To ensure maximum performance in production, you can pre-render all documentation files into the cache. This eliminates the need for parsing Markdown on the first request.
+
+Run the following command during your deployment process:
+
+```bash
+php artisan pertuk:build
 ```
 
 ## Testing

@@ -33,7 +33,7 @@
                     @endphp
 
                     <li>
-                        <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . $item['slug']) }}"
+                        <a href="{{ url('/' . config('pertuk.route_prefix', 'docs') . '/' . $locale . '/' . $item['slug']) }}"
                             class="group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 @if ($isActive) bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 @else text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white @endif"
                             @if ($isActive) aria-current="page" @endif>
                             @if ($isActive)

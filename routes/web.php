@@ -16,13 +16,18 @@ Route::prefix($routePrefix)
     ->middleware($middleware)
     ->name($routePrefix.'.')
     ->group(function () {
-        Route::get('/', [DocumentController::class, 'index'])->name('index');
+        // Redirect root /docs to default locale
+        Route::get('/', function () {
+            $default = config('pertuk.default_locale', 'en');
 
-        // JSON search index (must be before slug route)
-        Route::get('/index.json', [DocumentController::class, 'searchIndex'])->name('index.json');
+            return redirect()->route(config('pertuk.route_prefix', 'docs').'.show', ['locale' => $default, 'slug' => 'index']);
+        })->name('index');
 
-        // Must be last: catch-all slug route (allows slashes for nested docs)
-        Route::get('/{slug}', [DocumentController::class, 'show'])
+        // Search index per locale
+        Route::get('/{locale}/index.json', [DocumentController::class, 'searchIndex'])->name('index.json');
+
+        // Main docs route
+        Route::get('/{locale}/{slug?}', [DocumentController::class, 'show'])
             ->where('slug', '.*')
             ->name('show');
     });

@@ -78,6 +78,12 @@ class TestCase extends Orchestra
             // Use force=true to avoid race-condition mkdir errors in parallel tests
             File::makeDirectory($docsPath, 0755, true, true);
         }
+
+        // Create default locale directory
+        $defaultLocalePath = $docsPath.'/en';
+        if (! File::exists($defaultLocalePath)) {
+            File::makeDirectory($defaultLocalePath, 0755, true, true);
+        }
     }
 
     protected function cleanupTestDocsDirectory(): void
@@ -89,17 +95,24 @@ class TestCase extends Orchestra
         }
     }
 
-    protected function createTestMarkdownFile(string $filename, string $content, string $subdirectory = ''): string
+    protected function createTestMarkdownFile(string $filename, string $content, string $subdirectory = '', string $locale = 'en'): string
     {
         $docsPath = $this->getTestDocsPath();
-        $fullPath = $subdirectory ? $docsPath.'/'.$subdirectory : $docsPath;
 
-        if (! File::exists($fullPath)) {
-            // Use force=true when creating subdirectories during tests
-            File::makeDirectory($fullPath, 0755, true, true);
+        // Ensure path includes locale
+        $targetPath = $docsPath.'/'.$locale;
+
+        // If subdirectory is provided, append it
+        if ($subdirectory) {
+            $targetPath .= '/'.$subdirectory;
         }
 
-        $filePath = $fullPath.'/'.$filename;
+        if (! File::exists($targetPath)) {
+            // Use force=true when creating subdirectories during tests
+            File::makeDirectory($targetPath, 0755, true, true);
+        }
+
+        $filePath = $targetPath.'/'.$filename;
         File::put($filePath, $content);
 
         return $filePath;

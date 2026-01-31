@@ -20,7 +20,9 @@ class PertukServiceProvider extends PackageServiceProvider
             ->name('pertuk')
             ->hasConfigFile()
             ->hasViews()
-            ->hasRoute('web');
+            ->hasRoute('web')
+            ->hasAssets()
+            ->hasCommand(Console\Commands\BuildDocumentation::class);
     }
 
     public function packageRegistered(): void

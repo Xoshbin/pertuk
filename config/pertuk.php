@@ -38,4 +38,8 @@ return [
         'ar' => 'العربية',
     ],
 
+    // GitHub Repo & Branch for "Edit on GitHub" links
+    'github_repo' => env('PERTUK_GITHUB_REPO', 'username/repo'),
+    'github_branch' => env('PERTUK_GITHUB_BRANCH', 'main'),
+
 ];

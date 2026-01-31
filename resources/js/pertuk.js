@@ -1,31 +1,11 @@
-import hljs from "highlight.js/lib/core";
 
-// Import only the languages you need to keep bundle size small
-import javascript from "highlight.js/lib/languages/javascript";
-import php from "highlight.js/lib/languages/php";
-import sql from "highlight.js/lib/languages/sql";
-import bash from "highlight.js/lib/languages/bash";
-import json from "highlight.js/lib/languages/json";
-import xml from "highlight.js/lib/languages/xml"; // For HTML/Blade
-import css from "highlight.js/lib/languages/css";
-import yaml from "highlight.js/lib/languages/yaml";
-import markdown from "highlight.js/lib/languages/markdown";
 
-// Register languages
-hljs.registerLanguage("javascript", javascript);
-hljs.registerLanguage("php", php);
-hljs.registerLanguage("sql", sql);
-hljs.registerLanguage("bash", bash);
-hljs.registerLanguage("shell", bash); // Alias for bash
-hljs.registerLanguage("json", json);
-hljs.registerLanguage("html", xml);
-hljs.registerLanguage("xml", xml);
-hljs.registerLanguage("blade", xml); // Use XML highlighting for Blade
-hljs.registerLanguage("css", css);
-hljs.registerLanguage("yaml", yaml);
-hljs.registerLanguage("yml", yaml); // Alias for yaml
-hljs.registerLanguage("markdown", markdown);
-hljs.registerLanguage("md", markdown); // Alias for markdown
+import Alpine from "alpinejs";
+import collapse from "@alpinejs/collapse";
+import MiniSearch from "minisearch";
+
+window.Alpine = Alpine;
+Alpine.plugin(collapse);
 
 /**
  * Documentation JavaScript functionality
@@ -36,12 +16,107 @@ class DocsManager {
     }
 
     init() {
+        this.initAlpine();
         this.initThemeToggle();
         this.initSyntaxHighlighting();
         this.initSearch();
         this.initTableOfContents();
         this.initKeyboardShortcuts();
         this.initGlobalLanguageSelector();
+    }
+
+    /**
+     * Initialize Alpine.js components for interactive elements
+     */
+    initAlpine() {
+        Alpine.data("pertukTabs", () => ({
+            activeTab: 0,
+            tabs: [],
+            init() {
+                // Collect tabs from the DOM
+                const tabElements = Array.from(
+                    this.$el.querySelectorAll("x-pertuk-tab")
+                );
+                this.tabs = tabElements.map((el, i) => ({
+                    name: el.getAttribute("name") || `Tab ${i + 1}`,
+                    index: i,
+                    el: el,
+                }));
+
+                // Injected header
+                if (
+                    !this.$el.querySelector(".pertuk-tabs-header") &&
+                    this.tabs.length > 0
+                ) {
+                    const header = document.createElement("div");
+                    header.className = "pertuk-tabs-header";
+                    this.tabs.forEach((tab, i) => {
+                        const btn = document.createElement("button");
+                        btn.type = "button";
+                        btn.innerText = tab.name;
+                        btn.className = i === 0 ? "active" : "";
+                        btn.onclick = () => (this.activeTab = i);
+                        header.appendChild(btn);
+                        tab.btn = btn;
+                    });
+                    this.$el.insertBefore(header, this.$el.firstChild);
+                }
+
+                this.$watch("activeTab", (val) => {
+                    this.tabs.forEach((tab, i) => {
+                        tab.el.style.display = i === val ? "block" : "none";
+                        if (tab.btn) {
+                            tab.btn.classList.toggle("active", i === val);
+                        }
+                    });
+                });
+
+                // Set initial state
+                this.tabs.forEach((tab, i) => {
+                    tab.el.style.display =
+                        i === this.activeTab ? "block" : "none";
+                });
+            },
+        }));
+
+        Alpine.data("pertukAccordion", () => ({
+            activeItem: null,
+            init() {
+                const items = Array.from(
+                    this.$el.querySelectorAll("x-pertuk-accordion-item")
+                );
+                items.forEach((item, i) => {
+                    const title =
+                        item.getAttribute("title") || `Item ${i + 1}`;
+                    const content = item.innerHTML;
+
+                    // Wrap content and add header
+                    item.innerHTML = `
+                        <button type="button" class="pertuk-accordion-item-header" @click="toggle(${i})">
+                            <span>${title}</span>
+                            <svg class="pertuk-accordion-icon" :class="isOpen(${i}) ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div class="pertuk-accordion-item-content" x-show="isOpen(${i})" x-collapse>
+                            <div class="pertuk-accordion-body">${content}</div>
+                        </div>
+                    `;
+                    item.classList.add("pertuk-accordion-item");
+                });
+            },
+            toggle(id) {
+                this.activeItem = this.activeItem === id ? null : id;
+            },
+            isOpen(id) {
+                return this.activeItem === id;
+            },
+        }));
+
+        if (!window.AlpineStarted) {
+            Alpine.start();
+            window.AlpineStarted = true;
+        }
     }
 
     /**
@@ -89,10 +164,7 @@ class DocsManager {
      * Initialize syntax highlighting
      */
     initSyntaxHighlighting() {
-        // Highlight all code blocks
-        document.querySelectorAll("pre code").forEach((block) => {
-            hljs.highlightElement(block);
-        });
+        // Syntax highlighting is now handled server-side by Shiki
 
         // Add copy buttons to code blocks
         this.addCopyButtons();
@@ -187,15 +259,34 @@ class DocsManager {
                 const res = await fetch("/docs/index.json", {
                     headers: { Accept: "application/json" },
                 });
-                index = await res.json();
+                const data = await res.json();
+
+                index = new MiniSearch({
+                    fields: ["title", "heading", "content"], // fields to index for full-text search
+                    storeFields: [
+                        "slug",
+                        "title",
+                        "heading",
+                        "content",
+                        "anchor",
+                    ], // fields to return with search results
+                    searchOptions: {
+                        boost: { title: 2, heading: 1.5, content: 1 },
+                        fuzzy: 0.2,
+                        prefix: true,
+                    },
+                });
+
+                index.addAll(data);
             } catch (e) {
                 console.warn("Failed to load search index:", e);
-                index = [];
+                index = null;
             }
             return index;
         };
 
         const escapeHtml = (text) => {
+            if (!text) return "";
             const div = document.createElement("div");
             div.textContent = text;
             return div.innerHTML;
@@ -210,20 +301,28 @@ class DocsManager {
 
             results.innerHTML = items
                 .slice(0, 8)
-                .map(
-                    (it) => `
-                <a class="block rounded-md px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" href="/docs/${
-                    it.slug
-                }">
+                .map((it) => {
+                    const href = it.anchor
+                        ? `/docs/${it.slug}#${it.anchor}`
+                        : `/docs/${it.slug}`;
+                    const displayTitle = it.heading
+                        ? `${it.title} > ${it.heading}`
+                        : it.title;
+                    const excerpt = it.content
+                        ? it.content.substring(0, 100) + "..."
+                        : "";
+
+                    return `
+                <a class="block rounded-md px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" href="${href}">
                     <div class="font-medium text-gray-900 dark:text-white">${escapeHtml(
-                        it.title
+                        displayTitle
                     )}</div>
                     <div class="mt-1 text-xs text-gray-600 dark:text-gray-400">${escapeHtml(
-                        it.excerpt
+                        excerpt
                     )}</div>
                 </a>
-            `
-                )
+            `;
+                })
                 .join("");
             results.classList.remove("hidden");
         };
@@ -235,24 +334,8 @@ class DocsManager {
             }
 
             ensureIndex().then((idx) => {
-                const q = query.toLowerCase();
-                const matches = idx
-                    .filter(
-                        (it) =>
-                            it.title.toLowerCase().includes(q) ||
-                            (it.headings || []).some((h) =>
-                                (h || "").toLowerCase().includes(q)
-                            ) ||
-                            (it.excerpt || "").toLowerCase().includes(q)
-                    )
-                    .sort((a, b) => {
-                        // Prioritize title matches
-                        const aTitle = a.title.toLowerCase().includes(q);
-                        const bTitle = b.title.toLowerCase().includes(q);
-                        if (aTitle && !bTitle) return -1;
-                        if (!aTitle && bTitle) return 1;
-                        return 0;
-                    });
+                if (!idx) return;
+                const matches = idx.search(query);
                 render(matches);
             });
         };
@@ -274,7 +357,7 @@ class DocsManager {
     }
 
     /**
-     * Table of Contents active section highlighting
+     * Table of Contents active section highlighting using Intersection Observer
      */
     initTableOfContents() {
         const tocLinks = document.querySelectorAll("[data-toc-link]");
@@ -285,102 +368,90 @@ class DocsManager {
         );
         if (!headings.length) return;
 
-        let isScrolling = false;
-        let scrollTimeout;
+        // Use Intersection Observer to detect which heading is in view
+        const observerOptions = {
+            root: null,
+            rootMargin: "-100px 0px -70% 0px", // Trigger when heading is in the top 30% of the viewport
+            threshold: 0,
+        };
 
-        const updateActiveTocLink = () => {
-            if (isScrolling) return;
+        const headingStates = new Map();
 
-            const scrollY = window.scrollY;
-            const windowHeight = window.innerHeight;
-            const documentHeight = document.documentElement.scrollHeight;
+        const updateActiveLink = () => {
+            // Find headings that are "active" (intersecting)
+            const activeHeadings = headings.filter((h) =>
+                headingStates.get(h.id)
+            );
 
-            let activeHeading = null;
+            let currentId = null;
 
-            // If we're at the bottom of the page, highlight the last heading
-            if (scrollY + windowHeight >= documentHeight - 10) {
-                activeHeading = headings[headings.length - 1];
+            if (activeHeadings.length > 0) {
+                // If there are intersecting headings, pick the first one (highest in DOM)
+                currentId = activeHeadings[0].id;
             } else {
-                // Find the heading that's currently in view
-                for (let i = headings.length - 1; i >= 0; i--) {
-                    const heading = headings[i];
-                    const rect = heading.getBoundingClientRect();
-
-                    if (rect.top <= 100) {
-                        activeHeading = heading;
-                        break;
-                    }
+                // If no headings are intersecting, it might be because we're between headings
+                // Find the last heading that is above the viewport
+                const topHeadings = headings.filter(
+                    (h) => h.getBoundingClientRect().top < 100
+                );
+                if (topHeadings.length > 0) {
+                    currentId = topHeadings[topHeadings.length - 1].id;
                 }
             }
 
-            // Update TOC link styles
-            tocLinks.forEach((link) => {
-                const isActive =
-                    activeHeading &&
-                    link.getAttribute("data-toc-link") === activeHeading.id;
+            if (!currentId) return;
 
-                if (isActive) {
-                    link.classList.remove(
-                        "text-gray-600",
-                        "dark:text-gray-400"
-                    );
-                    link.classList.add(
-                        "bg-orange-50",
-                        "text-orange-700",
-                        "dark:bg-orange-900/20",
-                        "dark:text-orange-400"
-                    );
+            tocLinks.forEach((link) => {
+                const id = link.getAttribute("data-toc-link");
+                if (id === currentId) {
+                    link.classList.add("active");
                 } else {
-                    link.classList.remove(
-                        "bg-orange-50",
-                        "text-orange-700",
-                        "dark:bg-orange-900/20",
-                        "dark:text-orange-400"
-                    );
-                    link.classList.add("text-gray-600", "dark:text-gray-400");
+                    link.classList.remove("active");
                 }
             });
         };
 
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                headingStates.set(entry.target.id, entry.isIntersecting);
+            });
+            updateActiveLink();
+        }, observerOptions);
+
+        headings.forEach((heading) => observer.observe(heading));
+
         // Smooth scroll to heading when TOC link is clicked
         tocLinks.forEach((link) => {
-            link.addEventListener("click", function (e) {
+            link.addEventListener("click", (e) => {
                 e.preventDefault();
-                const targetId = this.getAttribute("data-toc-link");
+                const targetId = link.getAttribute("data-toc-link");
                 const targetElement = document.getElementById(targetId);
 
                 if (targetElement) {
-                    isScrolling = true;
+                    // Temporarily disconnect observer to prevent jumping highlights during smooth scroll
+                    // but actually most people prefer the highlight following the content.
+                    // We'll just rely on the smooth scroll and the observer.
 
-                    targetElement.scrollIntoView({
+                    const offset = 80; // Offset for fixed header if any
+                    const bodyRect = document.body.getBoundingClientRect().top;
+                    const elementRect =
+                        targetElement.getBoundingClientRect().top;
+                    const elementPosition = elementRect - bodyRect;
+                    const offsetPosition = elementPosition - offset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
                         behavior: "smooth",
-                        block: "start",
                     });
 
                     // Update URL hash
                     history.pushState(null, null, `#${targetId}`);
-
-                    // Reset scrolling flag after animation
-                    setTimeout(() => {
-                        isScrolling = false;
-                        updateActiveTocLink();
-                    }, 1000);
                 }
             });
         });
 
-        // Throttled scroll listener
-        window.addEventListener(
-            "scroll",
-            function () {
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(updateActiveTocLink, 50);
-            },
-            { passive: true }
-        );
-
-        // Initial call
-        updateActiveTocLink();
+        // Initial check in case we start at a hash
+        updateActiveLink();
     }
 
     /**

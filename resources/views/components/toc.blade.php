@@ -15,14 +15,10 @@
                 @foreach ($toc as $item)
                     @php
                         $isNested = $item['level'] === 3;
-                        $baseClasses = 'block rounded-md px-3 py-1.5 text-sm transition-colors duration-200';
-                        $defaultClasses =
-                            'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white';
-                        $activeClasses = 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400';
                     @endphp
 
                     <li class="{{ $isNested ? ($isRtl ? 'mr-4' : 'ml-4') : '' }}">
-                        <a href="#{{ $item['id'] }}" class="{{ $baseClasses }} {{ $defaultClasses }}"
+                        <a href="#{{ $item['id'] }}" class="docs-toc-link"
                             data-toc-link="{{ $item['id'] }}">
                             @if ($isNested)
                                 <span class="{{ $isRtl ? 'ml-2' : 'mr-2' }} text-gray-400">—</span>

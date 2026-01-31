@@ -26,8 +26,20 @@
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
+                    @php
+                        $currentLocale = app()->getLocale();
+                        $currentVersion = $current_version ?? null;
+                        
+                        $searchIndexUrl = $currentVersion 
+                            ? route('pertuk.docs.version.search.json', ['version' => $currentVersion, 'locale' => $currentLocale])
+                            : route('pertuk.docs.search.json', ['locale' => $currentLocale]);
+                            
+                        $searchBaseUrl = url('/' . config('pertuk.route_prefix', 'docs') . ($currentVersion ? '/' . $currentVersion : '') . '/' . $currentLocale);
+                    @endphp
                     <input id="docs-search-input" type="search" placeholder="{{ __('Search documentation...') }}"
                         aria-label="{{ __('Search documentation') }}"
+                        data-index-url="{{ $searchIndexUrl }}"
+                        data-base-url="{{ $searchBaseUrl }}"
                         class="w-full rounded-lg border border-gray-300 bg-gray-50/50 ps-10 pe-4 py-2.5 text-sm placeholder-gray-500 outline-none transition-all duration-200 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder-gray-400 dark:focus:border-orange-400 dark:focus:bg-gray-900 dark:focus:ring-orange-400/20"
                         autocomplete="off" />
                     <div class="absolute inset-y-0 end-0 pe-3 flex items-center pointer-events-none">

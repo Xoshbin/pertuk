@@ -2,6 +2,48 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.1.1 - 2026-01-31
+
+This update focuses on architectural excellence, long-term maintainability, and the introduction of a complete documentation versioning system.
+
+### 🏗 Major Architectural Refactoring
+
+We have significantly refactored the core engine to align with the highest Laravel coding standards.
+
+- **Service Splitting**: The monolithic `DocumentationService` has been decomposed into smaller, single-responsibility services:
+  - `MarkdownRenderer`: Handles all Markdown to HTML conversion logic.
+  - `ContentProcessor`: Manages file discovery, path resolution, and metadata extraction.
+  
+- **Strict Typing**: Applied `declare(strict_types=1);` across all controllers and services to ensure type safety and code quality.
+- **Controller Cleanup**: Controllers have been refactored to be "lean," moving business logic into the service layer and utilizing modern Laravel idioms.
+- **Logic-Free Views**: Refactored Blade components and views to remove inline logic, relying on named routes and pre-processed data.
+
+### 🚀 New Features
+
+- **Documentation Versioning**:
+  - Full support for multiple versions of documentation.
+  - Automatic version discovery from the filesystem.
+  - UI Version Selector component for easy switching.
+  - Version-aware routing and locale preservation during version switches.
+  
+
+### 🛠 Improvements
+
+- **Named Routes**: Replaced hardcoded URIs with a robust named route system (`pertuk.docs.*`), making the package more flexible for integration.
+- **Optimized Routing**: Streamlined [routes/web.php](file:///Users/khoshbin/PhpstormProjects/pertuk/routes/web.php) by removing closures and utilizing controller groups for better performance and readability.
+
+### 🐞 Bug Fixes & Maintenance
+
+- **Version Selector Fix**: Resolved an issue where the version selector would "stick" to the latest version on index pages.
+- **PHPStan & Code Quality**: Fixed several static analysis warnings and resolved deprecated usage of the `Request::get()` method.
+- **CI Test Robustness**: Improved the `FileReadingTest` to be more resilient to environment-specific file permission issues in CI environments.
+- **Test Suite Health**: All 59 tests are currently passing, ensuring a stable release.
+
+
+---
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/0.1.0...0.1.1
+
 ## v0.1.0 - 2026-01-31
 
 ### Release 0.1.0

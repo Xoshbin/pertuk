@@ -1,4 +1,4 @@
-<x-pertuk::pertuk-layout :title="'Documentation'" :current-version="$current_version ?? null">
+<x-pertuk::pertuk-layout :title="'Documentation'" :current-version="$current_version ?? null" :items="$items">
     <x-slot:sidebar>
         @include('pertuk::components.sidebar', ['items' => $items])
     </x-slot:sidebar>
@@ -71,50 +71,56 @@
             </div>
         </div>
 
-        <!-- Documentation Sections -->
-        <div class="space-y-8">
-            @foreach($groupedItems as $category => $categoryItems)
-                <div class="border-b border-gray-200 dark:border-gray-700 pb-8 last:border-b-0">
-                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-                        {{ str_replace('-', ' ', ucfirst($category)) }}
-                    </h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        @foreach($categoryItems as $item)
-                            @php
-                                $displayTitle = $item['title'];
-                                $description = 'Learn about ' . strtolower($displayTitle);
-
-                                // Clean up title if it contains category prefix
-                                if (str_contains($item['title'], ':')) {
-                                    $parts = explode(':', $item['title'], 2);
-                                    $displayTitle = trim($parts[1] ?? $item['title']);
-                                    $description = 'Learn about ' . strtolower($displayTitle);
-                                }
-                            @endphp
-
-                            <a
-                                href="{{ $current_version ? route('pertuk.docs.version.show', ['version' => $current_version, 'locale' => app()->getLocale(), 'slug' => $item['slug']]) : route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => $item['slug']]) }}"
-                                class="group block rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-all duration-200 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-md"
-                            >
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <h3 class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                                            {{ $displayTitle }}
-                                        </h3>
-                                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                            {{ $description }}
-                                        </p>
-                                    </div>
-                                    <svg class="h-5 w-5 text-gray-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        <!-- Documentation Sections (Context Grid) -->
+        <div class="mb-16">
+            <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
+                {{ __('Browse by Topic') }}
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                @foreach($groupedItems as $category => $categoryItems)
+                    @php
+                       $firstItem = $categoryItems->first();
+                       $linkUrl = route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => $firstItem['slug']]);
+                       if ($current_version) {
+                           $linkUrl = route('pertuk.docs.version.show', ['version' => $current_version, 'locale' => app()->getLocale(), 'slug' => $firstItem['slug']]);
+                       }
+                           
+                       $categoryName = str_replace('-', ' ', ucfirst($category));
+                       $count = $categoryItems->count();
+                    @endphp
+                    
+                    <a href="{{ $linkUrl }}" class="group block h-full p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300">
+                        <div class="flex flex-col h-full">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                                    {{ $categoryName }}
+                                </h3>
+                                <div class="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg group-hover:bg-orange-100 dark:group-hover:bg-orange-900/30 transition-colors">
+                                    <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-orange-600 dark:group-hover:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
                                 </div>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
+                            </div>
+                            
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6 flex-grow">
+                                {{ __('Explore') }} {{ strtolower($categoryName) }} {{ __('documentation') }}.
+                            </p>
+                            
+                            <div class="flex items-center justify-between mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+                                <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    {{ $count }} {{ Str::plural('article', $count) }}
+                                </div>
+                                <span class="text-sm font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                                    {{ __('Read') }}
+                                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
         </div>
 
         <!-- Footer CTA -->

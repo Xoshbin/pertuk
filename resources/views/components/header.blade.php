@@ -45,6 +45,42 @@
 
             <!-- Navigation -->
             <div class="flex items-center gap-4">
+                 <!-- Context Switcher (Desktop) -->
+                 <div class="hidden lg:flex items-center gap-1 mr-4 border-r border-gray-200 dark:border-gray-800 pr-4">
+                    @php
+                       // Identify top-level contexts for navigation
+                       $navContexts = collect($items ?? [])->map(function($item) {
+                           $parts = explode('/', $item['slug']);
+                           return count($parts) > 1 ? $parts[0] : 'General';
+                       })->unique();
+                       
+                       // Current context
+                       $currentContext = 'General';
+                       if(isset($slug)) {
+                           $parts = explode('/', $slug);
+                           $currentContext = count($parts) > 1 ? $parts[0] : 'General';
+                       }
+                    @endphp
+                    
+                    @foreach($navContexts as $context)
+                        @if($context !== 'General')
+                             @php
+                                // Find the index page or first page of this context to link to
+                                $firstDoc = collect($items ?? [])->first(function($item) use ($context) {
+                                    return str_starts_with($item['slug'], $context . '/');
+                                });
+                                $linkUrl = $firstDoc 
+                                    ? route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => $firstDoc['slug']])
+                                    : '#';
+                             @endphp
+                             <a href="{{ $linkUrl }}" 
+                                class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $currentContext === $context ? 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800' }}">
+                                {{ ucfirst(str_replace('-', ' ', $context)) }}
+                             </a>
+                        @endif
+                    @endforeach
+                 </div>
+
                 <!-- Global Language Selector -->
                 <div class="hidden md:block">
                     <label for="global-lang-select" class="sr-only">{{ __('Language') }}</label>
@@ -68,7 +104,7 @@
                         $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
                         $currentVersion = $current_version ?? config('pertuk.default_version');
                         $currentLocale = app()->getLocale();
-                        $currentSlug = $slug ?? 'index';
+                        $currentSlug = $currentSlug ?? $slug ?? 'index';
                         $routePrefix = config('pertuk.route_prefix', 'docs');
                     @endphp
                     @if(count($versions) > 0)

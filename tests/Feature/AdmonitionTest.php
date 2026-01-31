@@ -5,7 +5,7 @@ it('renders admonitions with correct classes', function () {
 
     $this->createTestMarkdownFile('admonition-test.md', $content);
 
-    $response = $this->get('/docs/admonition-test');
+    $response = $this->get('/docs/en/admonition-test');
 
     $response->assertOk();
 

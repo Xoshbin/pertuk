@@ -8,8 +8,8 @@ use Xoshbin\Pertuk\Services\DocumentationService;
 it('throws FileNotFoundException for non-existent documents', function () {
     $service = DocumentationService::make();
 
-    expect(fn () => $service->get('non-existent-doc'))
-        ->toThrow(FileNotFoundException::class, 'Doc not found for slug: non-existent-doc');
+    expect(fn () => $service->get('en', 'non-existent-doc'))
+        ->toThrow(FileNotFoundException::class, 'Doc not found for [en] slug: non-existent-doc');
 });
 
 it('handles documents without front matter', function () {
@@ -17,7 +17,7 @@ it('handles documents without front matter', function () {
     $this->createTestMarkdownFile('no-frontmatter.md', "# Simple Document\n\nThis document has no front matter.");
 
     $service = DocumentationService::make();
-    $doc = $service->get('no-frontmatter');
+    $doc = $service->get('en', 'no-frontmatter');
 
     expect($doc['title'])->toBe('Simple Document'); // Should extract from H1
     expect($doc['html'])->toContain('This document has no front matter');
@@ -34,7 +34,7 @@ it('handles documents with invalid YAML front matter', function () {
         ->with('Failed to parse front matter', \Mockery::type('array'));
 
     $service = DocumentationService::make();
-    $doc = $service->get('invalid-yaml');
+    $doc = $service->get('en', 'invalid-yaml');
 
     // Should still work, falling back to content parsing
     expect($doc['title'])->toBe('Document with Invalid YAML');
@@ -46,7 +46,7 @@ it('handles empty markdown files', function () {
     $this->createTestMarkdownFile('empty.md', '');
 
     $service = DocumentationService::make();
-    $doc = $service->get('empty');
+    $doc = $service->get('en', 'empty');
 
     expect($doc['title'])->toBe('Empty'); // Should infer from filename
     expect($doc['html'])->toBe('');
@@ -58,7 +58,7 @@ it('handles files with only front matter and no content', function () {
     $this->createTestMarkdownFile('only-frontmatter.md', "---\ntitle: Only Front Matter\norder: 1\n---");
 
     $service = DocumentationService::make();
-    $doc = $service->get('only-frontmatter');
+    $doc = $service->get('en', 'only-frontmatter');
 
     expect($doc['title'])->toBe('Only Front Matter');
     expect($doc['html'])->toBe('');
@@ -70,7 +70,7 @@ it('handles files with malformed markdown', function () {
     $this->createTestMarkdownFile('malformed.md', $content);
 
     $service = DocumentationService::make();
-    $doc = $service->get('malformed');
+    $doc = $service->get('en', 'malformed');
 
     // Should still parse what it can
     expect($doc['title'])->toBe('Malformed Markdown');
@@ -87,7 +87,7 @@ it('handles very large markdown files', function () {
     $this->createTestMarkdownFile('large.md', $content);
 
     $service = DocumentationService::make();
-    $doc = $service->get('large');
+    $doc = $service->get('en', 'large');
 
     expect($doc['title'])->toBe('Large Document');
     expect(strlen($doc['html']))->toBeGreaterThan(10000);
@@ -99,7 +99,7 @@ it('handles files with special characters in content', function () {
     $this->createTestMarkdownFile('special-chars.md', $content);
 
     $service = DocumentationService::make();
-    $doc = $service->get('special-chars');
+    $doc = $service->get('en', 'special-chars');
 
     expect($doc['title'])->toBe('Special Characters');
     expect($doc['html'])->toContain('🚀');
@@ -115,7 +115,7 @@ it('handles files with complex markdown features', function () {
     $this->createTestMarkdownFile('complex.md', $content);
 
     $service = DocumentationService::make();
-    $doc = $service->get('complex');
+    $doc = $service->get('en', 'complex');
 
     expect($doc['title'])->toBe('Complex Markdown');
     expect($doc['html'])->toContain('<table>');
@@ -131,7 +131,7 @@ it('excludes files based on configuration', function () {
     $this->createTestMarkdownFile('normal.md', '# Normal\n\nThis should be included');
 
     $service = DocumentationService::make();
-    $list = $service->list();
+    $list = $service->list('en');
 
     expect($list)->toHaveKey('normal');
     expect($list)->not->toHaveKey('.DS_Store');
@@ -144,7 +144,7 @@ it('handles files in excluded directories', function () {
     $this->createTestMarkdownFile('public.md', '# Public Doc', 'User Guide');
 
     $service = DocumentationService::make();
-    $list = $service->list();
+    $list = $service->list('en');
 
     expect($list)->toHaveKey('User Guide/public');
     expect($list)->not->toHaveKey('Developers/internal');
@@ -159,7 +159,7 @@ it('handles file reading errors gracefully', function () {
         $service = DocumentationService::make();
 
         // Should handle the error gracefully
-        expect(fn () => $service->get('test-permissions'))
+        expect(fn () => $service->get('en', 'test-permissions'))
             ->toThrow(\Exception::class);
 
         // Restore permissions for cleanup
@@ -179,7 +179,7 @@ it('handles concurrent file access', function () {
     // Simulate concurrent access
     $results = [];
     for ($i = 0; $i < 5; $i++) {
-        $results[] = $service->get('concurrent');
+        $results[] = $service->get('en', 'concurrent');
     }
 
     // All results should be identical
@@ -194,7 +194,7 @@ it('handles files with BOM (Byte Order Mark)', function () {
     $this->createTestMarkdownFile('bom-test.md', $content);
 
     $service = DocumentationService::make();
-    $doc = $service->get('bom-test');
+    $doc = $service->get('en', 'bom-test');
 
     expect($doc['title'])->toBe('BOM Test');
     expect($doc['html'])->toContain('Content with BOM');

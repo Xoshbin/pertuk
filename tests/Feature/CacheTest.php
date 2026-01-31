@@ -15,21 +15,21 @@ it('caches parsed document content', function () {
 
     // First call should hit the file system
     $start = microtime(true);
-    $doc1 = $service->get('test-cache');
+    $doc1 = $service->get('en', 'test-cache');
     $time1 = microtime(true) - $start;
 
     // Second call should hit the cache (should be faster)
     $start = microtime(true);
-    $doc2 = $service->get('test-cache');
+    $doc2 = $service->get('en', 'test-cache');
     $time2 = microtime(true) - $start;
 
     expect($doc1)->toEqual($doc2);
     expect($time2)->toBeLessThan($time1); // Cache should be faster
 
     // Verify cache key exists
-    $path = $this->getTestDocsPath().'/test-cache.md';
+    $path = $this->getTestDocsPath().'/en/test-cache.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:'.md5($path.':'.$mtime);
+    $cacheKey = 'pertuk:docs:en:'.md5($path.':'.$mtime);
 
     expect(Cache::has($cacheKey))->toBeTrue();
 });
@@ -41,7 +41,7 @@ it('invalidates cache when file is modified', function () {
     $service = DocumentationService::make();
 
     // Get document (this will cache it)
-    $doc1 = $service->get('test-invalidation');
+    $doc1 = $service->get('en', 'test-invalidation');
     expect($doc1['title'])->toBe('Original Title');
 
     $mtime1 = File::lastModified($filePath);
@@ -56,7 +56,7 @@ it('invalidates cache when file is modified', function () {
     expect($mtime2)->toBeGreaterThan($mtime1);
 
     // Get document again (should get fresh content, not cached)
-    $doc2 = $service->get('test-invalidation');
+    $doc2 = $service->get('en', 'test-invalidation');
     expect($doc2['title'])->toBe('Updated Title');
     expect($doc2['html'])->toContain('updated content body');
 });
@@ -70,12 +70,12 @@ it('respects cache TTL configuration', function () {
     $service = DocumentationService::make();
 
     // Get document (this will cache it)
-    $doc1 = $service->get('test-ttl');
+    $doc1 = $service->get('en', 'test-ttl');
 
     // Verify it's cached
-    $path = $this->getTestDocsPath().'/test-ttl.md';
+    $path = $this->getTestDocsPath().'/en/test-ttl.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:'.md5($path.':'.$mtime);
+    $cacheKey = 'pertuk:docs:en:'.md5($path.':'.$mtime);
     expect(Cache::has($cacheKey))->toBeTrue();
 
     // Wait for TTL to expire
@@ -93,17 +93,17 @@ it('generates unique cache keys for different files', function () {
     $service = DocumentationService::make();
 
     // Get both documents
-    $service->get('doc1');
-    $service->get('doc2');
+    $service->get('en', 'doc1');
+    $service->get('en', 'doc2');
 
     // Verify different cache keys exist
-    $path1 = $this->getTestDocsPath().'/doc1.md';
-    $path2 = $this->getTestDocsPath().'/doc2.md';
+    $path1 = $this->getTestDocsPath().'/en/doc1.md';
+    $path2 = $this->getTestDocsPath().'/en/doc2.md';
     $mtime1 = File::lastModified($path1);
     $mtime2 = File::lastModified($path2);
 
-    $cacheKey1 = 'pertuk:docs:'.md5($path1.':'.$mtime1);
-    $cacheKey2 = 'pertuk:docs:'.md5($path2.':'.$mtime2);
+    $cacheKey1 = 'pertuk:docs:en:'.md5($path1.':'.$mtime1);
+    $cacheKey2 = 'pertuk:docs:en:'.md5($path2.':'.$mtime2);
 
     expect($cacheKey1)->not->toBe($cacheKey2);
     expect(Cache::has($cacheKey1))->toBeTrue();
@@ -141,17 +141,17 @@ it('handles cache corruption gracefully', function () {
     $service = DocumentationService::make();
 
     // Get document to cache it
-    $doc1 = $service->get('cache-corruption');
+    $doc1 = $service->get('en', 'cache-corruption');
 
     // Manually corrupt the cache
-    $path = $this->getTestDocsPath().'/cache-corruption.md';
+    $path = $this->getTestDocsPath().'/en/cache-corruption.md';
     $mtime = File::lastModified($path);
-    $cacheKey = 'pertuk:docs:'.md5($path.':'.$mtime);
+    $cacheKey = 'pertuk:docs:en:'.md5($path.':'.$mtime);
 
     Cache::put($cacheKey, 'corrupted-data', 60);
 
     // Should handle corruption and regenerate cache
-    $doc2 = $service->get('cache-corruption');
+    $doc2 = $service->get('en', 'cache-corruption');
     expect($doc2)->toBeArray();
     expect($doc2)->toHaveKey('title');
     expect($doc2['title'])->toBe('Cache Corruption Test');

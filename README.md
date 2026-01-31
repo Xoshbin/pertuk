@@ -136,7 +136,7 @@ If you don't need multiple versions, you can place your locale folders directly 
 docs/
 ├── en/                        # English
 │   └── getting-started.md
-└── ar/                        # Arabic (RTL)
+└── ckb/                        # Kurdish (Sorani) (RTL)
     └── getting-started.md
 ```
 

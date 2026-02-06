@@ -6,7 +6,7 @@
     $repo = config('pertuk.github_repo');
     $branch = config('pertuk.github_branch', 'main');
     $root = config('pertuk.root'); // e.g. /var/www/html/docs
-    $relativeRoot = \Illuminate\Support\Str::after($root, base_path() . DIRECTORY_SEPARATOR); // e.g. docs
+    $relativeRoot = config('pertuk.github_path') ?? \Illuminate\Support\Str::after($root, base_path() . DIRECTORY_SEPARATOR); // e.g. docs
 @endphp
 
 <x-pertuk::pertuk-layout :title="$title" :current-locale="$current_locale" :current-version="$current_version" :slug="$slug" :items="$items">

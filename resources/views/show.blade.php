@@ -7,6 +7,10 @@
     $branch = config('pertuk.github_branch', 'main');
     $root = config('pertuk.root'); // e.g. /var/www/html/docs
     $relativeRoot = \Illuminate\Support\Str::after($root, base_path() . DIRECTORY_SEPARATOR); // e.g. docs
+    
+    // Allow overriding the path prefix for GitHub links (useful for submodules)
+    $githubRoot = config('pertuk.github_root');
+    $pathPrefix = $githubRoot !== null ? $githubRoot : $relativeRoot;
 @endphp
 
 <x-pertuk::pertuk-layout :title="$title" :current-locale="$current_locale" :current-version="$current_version" :slug="$slug" :items="$items">
@@ -92,7 +96,12 @@
 
                 <div class="flex items-center gap-4">
                     @if ($repo)
-                        <a href="https://github.com/{{ $repo }}/edit/{{ $branch }}/{{ $relativeRoot }}/{{ $locale }}/{{ $slug }}.md"
+                        @php
+                            $githubPath = collect([$pathPrefix, $locale, $slug . '.md'])
+                                ->filter(fn($part) => !empty($part))
+                                ->implode('/');
+                        @endphp
+                        <a href="https://github.com/{{ $repo }}/edit/{{ $branch }}/{{ $githubPath }}"
                             target="_blank" rel="noopener noreferrer"
                             class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

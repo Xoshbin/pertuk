@@ -2,6 +2,11 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.1.3 - 2026-02-06
+
+fixed the issue by adding a github_path configuration to the pertuk package and setting it to an empty string in the kezi application configuration. This ensures that the "Edit on GitHub" link points to the correct location in the kezi-docs repository, removing the incorrect docs/ prefix.
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/0.1.2...0.1.3
+
 ## v0.1.2 - 2026-01-31
 
 ### What's Changed

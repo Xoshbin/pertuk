@@ -9,6 +9,10 @@ Pertuk is a powerful Laravel documentation package that provides a complete docu
 
 ![img.png](assets/screenshot.jpeg)
 
+## Example Usage
+
+You can see a live example of Pertuk in action at [https://kezi.amro.tech/docs/en](https://kezi.amro.tech/docs/en)
+
 ## Features
 
 -   📖 **Premium Markdown**: Full CommonMark and GitHub Flavored Markdown support

@@ -24,9 +24,9 @@ class DocumentController extends Controller
     public function root(): RedirectResponse
     {
         $default = config('pertuk.default_locale', 'en');
-        $prefix = config('pertuk.route_prefix', 'docs');
+        $routeNamePrefix = config('pertuk.route_name_prefix', 'pertuk.docs.');
 
-        return redirect()->route($prefix.'.show', [
+        return redirect()->route($routeNamePrefix.'show', [
             'locale' => $default,
             'slug' => 'index',
         ]);

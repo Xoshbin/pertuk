@@ -11,7 +11,7 @@ Route::match(['GET', 'POST'], '/locale/{locale}', [LocaleController::class, 'set
 
 Route::prefix(config('pertuk.route_prefix', 'docs'))
     ->middleware(config('pertuk.middleware', []))
-    ->name('pertuk.docs.')
+    ->name(config('pertuk.route_name_prefix', 'pertuk.docs.'))
     ->group(function () {
         $locales = implode('|', (array) config('pertuk.supported_locales', ['en']));
         $version = '(?!('.$locales.')$)[a-zA-Z0-9\.]+';

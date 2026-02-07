@@ -61,6 +61,9 @@ return [
     // Route prefix for documentation
     'route_prefix' => 'docs',
 
+    // Route name prefix
+    'route_name_prefix' => 'pertuk.docs.',
+
     // Route middleware
     'middleware' => ['web'],
 ];
@@ -245,6 +248,17 @@ Run the following command during your deployment process:
 
 ```bash
 php artisan pertuk:build
+```
+
+### Assets & Directory Conflicts (Important)
+
+When using a route prefix like `/docs`, ensure you **do not** have a physical directory named `public/docs` in your project. In production environments (like Nginx), physical directories take precedence over Laravel routes, which may result in a `403 Forbidden` error.
+
+**Best Practice:**
+Place your documentation images in a nested directory such as `public/images/docs/` and reference them in your markdown like so:
+
+```markdown
+![Screenshot](/images/docs/my-feature.png)
 ```
 
 ## Testing

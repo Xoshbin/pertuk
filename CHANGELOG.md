@@ -2,6 +2,13 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.1.5 - 2026-02-07
+
+1. make package links dynamic by moving them to
+2. feat implement documentation asset management and serving
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/0.1.4...0.1.5
+
 ## v0.1.4 - 2026-02-07
 
 feat: Introduce configurable route name prefix and add asset conflict warnings to the README.

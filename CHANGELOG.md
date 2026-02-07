@@ -2,6 +2,11 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.1.4 - 2026-02-07
+
+feat: Introduce configurable route name prefix and add asset conflict warnings to the README.
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/0.1.3...0.1.4
+
 ## v0.1.3 - 2026-02-06
 
 fixed the issue by adding a github_path configuration to the pertuk package and setting it to an empty string in the kezi application configuration. This ensures that the "Edit on GitHub" link points to the correct location in the kezi-docs repository, removing the incorrect docs/ prefix.

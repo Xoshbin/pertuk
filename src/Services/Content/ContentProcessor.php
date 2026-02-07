@@ -143,10 +143,20 @@ class ContentProcessor
             return $tag;
         }, $html) ?? $html;
 
-        // Images: make src absolute to /storage or /docs assets path if needed
-        // Currently just returning tag as-is but placeholder for future logic
-        $html = preg_replace_callback('/<img\s+([^>]*src=\"[^\"]+\"[^>]*)>/i', function ($m) {
+        // Images: make src absolute to /docs assets path if it's a relative path to assets
+        $html = preg_replace_callback('/<img\s+([^>]*src=\"([^\"]+)\"[^>]*)>/i', function ($m) {
             $tag = $m[0];
+            $src = $m[2];
+
+            if (! Str::startsWith($src, ['http://', 'https://', '/'])) {
+                $assetsPath = (string) config('pertuk.assets_path', 'assets');
+                if (Str::contains($src, $assetsPath.'/')) {
+                    $fileName = Str::after($src, $assetsPath.'/');
+                    $prefix = (string) config('pertuk.route_prefix', 'docs');
+                    $newSrc = url($prefix.'/assets/'.$fileName);
+                    $tag = str_replace('src="'.$src.'"', 'src="'.$newSrc.'"', $tag);
+                }
+            }
 
             return $tag;
         }, $html) ?? $html;

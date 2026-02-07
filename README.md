@@ -66,6 +66,9 @@ return [
 
     // Route middleware
     'middleware' => ['web'],
+
+    // Assets directory (relative to documentation root)
+    'assets_path' => 'assets',
 ];
 ```
 
@@ -250,16 +253,21 @@ Run the following command during your deployment process:
 php artisan pertuk:build
 ```
 
-### Assets & Directory Conflicts (Important)
+### Assets & Images
 
-When using a route prefix like `/docs`, ensure you **do not** have a physical directory named `public/docs` in your project. In production environments (like Nginx), physical directories take precedence over Laravel routes, which may result in a `403 Forbidden` error.
+Pertuk comes with a built-in asset serving system. This means you can keep your images and screenshots directly inside your documentation repository instead of the `public/` folder of your main application.
 
 **Best Practice:**
-Place your documentation images in a nested directory such as `public/images/docs/` and reference them in your markdown like so:
+Place your images in an `assets/` directory at the root of your documentation (e.g., `docs/assets/`). You can then reference them in your markdown using a relative path:
 
 ```markdown
-![Screenshot](/images/docs/my-feature.png)
+![My Feature](../assets/my-feature.png)
 ```
+
+Pertuk will automatically rewrite these relative paths to point to a secure asset route (`/docs/assets/filename.png`), ensuring they render correctly even when the documentation is nested.
+
+**Directory Conflicts:**
+When using a route prefix like `/docs`, ensure you **do not** have a physical directory named `public/docs` in your project. In production environments (like Nginx), physical directories take precedence over Laravel routes, which may result in a `403 Forbidden` error.
 
 ## Testing
 

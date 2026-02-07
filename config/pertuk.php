@@ -53,4 +53,7 @@ return [
     'github_branch' => env('PERTUK_GITHUB_BRANCH', 'main'), // @phpstan-ignore-line
     'github_path' => null, // Folder path in repo where docs are located (null = use same structure as local)
 
+    // Assets directory (relative to documentation root)
+    'assets_path' => 'assets',
+
 ];

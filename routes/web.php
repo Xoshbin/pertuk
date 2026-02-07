@@ -20,6 +20,11 @@ Route::prefix(config('pertuk.route_prefix', 'docs'))
             // Root redirect
             Route::get('/', 'root')->name('index');
 
+            // Assets serving
+            Route::get('/assets/{path}', 'asset')
+                ->where('path', '.*')
+                ->name('asset');
+
             // Search index
             Route::get('/{locale}/index.json', 'searchIndex')
                 ->where('locale', $locales)

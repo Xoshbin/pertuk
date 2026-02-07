@@ -146,4 +146,22 @@ class DocumentController extends Controller
 
         return response()->json($items)->header('Content-Type', 'application/json');
     }
+
+    /**
+     * Serve documentation assets.
+     */
+    public function asset(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $path = (string) $request->route('path');
+        $assetsPath = (string) config('pertuk.assets_path', 'assets');
+        $root = (string) config('pertuk.root', base_path('docs'));
+
+        $fullPath = $root.DIRECTORY_SEPARATOR.$assetsPath.DIRECTORY_SEPARATOR.$path;
+
+        if (! file_exists($fullPath) || is_dir($fullPath)) {
+            abort(404);
+        }
+
+        return response()->file($fullPath);
+    }
 }

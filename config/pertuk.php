@@ -56,4 +56,8 @@ return [
     // Assets directory (relative to documentation root)
     'assets_path' => 'assets',
 
+    // External Links
+    'github_url' => env('PERTUK_GITHUB_URL', 'https://github.com/Xoshbin/kezi'),
+    'discord_url' => env('PERTUK_DISCORD_URL', 'https://discord.gg/your-discord'),
+
 ];

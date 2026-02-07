@@ -67,8 +67,17 @@ return [
     // Route middleware
     'middleware' => ['web'],
 
+    // GitHub Repo & Branch for "Edit on GitHub" links
+    'github_repo' => env('PERTUK_GITHUB_REPO', 'username/repo'),
+    'github_branch' => env('PERTUK_GITHUB_BRANCH', 'main'),
+    'github_path' => null, // Folder path in repo where docs are located
+
     // Assets directory (relative to documentation root)
     'assets_path' => 'assets',
+
+    // External Links
+    'github_url' => env('PERTUK_GITHUB_URL', ''),
+    'discord_url' => env('PERTUK_DISCORD_URL', ''),
 ];
 ```
 

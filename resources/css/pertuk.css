@@ -4,7 +4,7 @@
 @source "../views/**/*.blade.php";
 @source "../js/**/*.js";
 
-@source "../js/**/*.js";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* Documentation-specific styles */
 .docs-prose a.heading-anchor {

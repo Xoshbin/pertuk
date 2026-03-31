@@ -17,7 +17,7 @@ it('renders ascii art with custom renderer', function () {
     $response->assertSee('class="ascii-art-container"', false);
     $response->assertSee('class="ascii-art"', false);
     $response->assertSee('data-language="ascii"', false);
-        
+
     // Ensure newlines are preserved and content is present
     $response->assertSee('+---+', false);
     $response->assertSee('| A |', false);
@@ -34,7 +34,7 @@ it('renders json code blocks with proper language labels or classes', function (
 
     // Shiki or CommonMark should add the language-json class
     $response->assertSee('language-json', false);
-        
+
     // Content should be present
     $response->assertSee('"id"', false);
     $response->assertSee('"test"', false);
@@ -53,10 +53,10 @@ it('preserves newlines in multi-line code blocks', function () {
     // Check for the presence of the lines
     $response->assertSee('first line', false);
     $response->assertSee('second line', false);
-    
+
     // We expect them to be separated by a newline in the source OR in the rendered HTML
     // Normally pre tags preserve them.
     $html = $response->getContent();
-    expect($html)->toContain("first line");
-    expect($html)->toContain("second line");
+    expect($html)->toContain('first line');
+    expect($html)->toContain('second line');
 });

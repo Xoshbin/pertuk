@@ -1,5 +1,7 @@
 <?php
 
+use Xoshbin\Pertuk\Services\DocumentationService;
+
 it('renders the docs index with at least one document', function () {
     // Create a test document
     $this->createTestMarkdownFile('payments.md', "---\ntitle: Payments\norder: 1\n---\n\n# Payments\n\nThis is a guide about payments.");
@@ -19,7 +21,7 @@ it('discovers available versions correctly', function () {
     $this->createTestMarkdownFile('test.md', '# Test', '', 'en', 'v1.0');
     $this->createTestMarkdownFile('test.md', '# Test', '', 'ckb', 'v2.0');
 
-    $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
+    $versions = DocumentationService::getAvailableVersions();
 
     expect($versions)->toBeArray();
     expect($versions)->toContain('v1.0');

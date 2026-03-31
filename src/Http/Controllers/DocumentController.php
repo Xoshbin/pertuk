@@ -14,6 +14,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Xoshbin\Pertuk\Services\DocumentationService;
 
 class DocumentController extends Controller
@@ -150,7 +151,7 @@ class DocumentController extends Controller
     /**
      * Serve documentation assets.
      */
-    public function asset(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function asset(Request $request): BinaryFileResponse
     {
         $path = (string) $request->route('path');
         $assetsPath = (string) config('pertuk.assets_path', 'assets');

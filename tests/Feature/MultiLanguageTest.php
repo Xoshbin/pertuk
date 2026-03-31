@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Xoshbin\Pertuk\Services\DocumentationService;
 
 it('detects document locale from filename suffix', function () {
@@ -115,8 +116,8 @@ it('falls back to base document when locale-specific version is missing', functi
     // Let's assume strict mode simply throws if not found for now, or adapt test.
     try {
         $service->get('ar', 'fallback-test');
-    } catch (\Exception $e) {
-        expect($e)->toBeInstanceOf(\Illuminate\Contracts\Filesystem\FileNotFoundException::class);
+    } catch (Exception $e) {
+        expect($e)->toBeInstanceOf(FileNotFoundException::class);
     }
 
     // Strict mode usually means strict. No implicit fallback to 'en' content if 'en/slug' exists but 'ar/slug' does not,

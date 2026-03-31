@@ -1,5 +1,7 @@
 <?php
 
+use Xoshbin\Pertuk\Services\DocumentationService;
+
 it('renders documentation from a specific version', function () {
     // Create test documents in different versions
     $this->createTestMarkdownFile('test.md', "# Version 1.0\nContent for v1.0", '', 'en', 'v1.0');
@@ -61,7 +63,7 @@ it('discovers available versions from directory structure', function () {
     $this->createTestMarkdownFile('test.md', '# v2.0', '', 'en', 'v2.0');
     $this->createTestMarkdownFile('test.md', '# v1.0', '', 'en', 'v1.0');
 
-    $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
+    $versions = DocumentationService::getAvailableVersions();
 
     expect($versions)->toBe(['v2.0', 'v1.0']);
 });
@@ -73,7 +75,7 @@ it('excludes versions based on configuration', function () {
     $this->createTestMarkdownFile('test.md', '# v0.8-alpha', '', 'en', 'v0.8-alpha');
     $this->createTestMarkdownFile('test.md', '# archived', '', 'en', 'archived');
 
-    $versions = \Xoshbin\Pertuk\Services\DocumentationService::getAvailableVersions();
+    $versions = DocumentationService::getAvailableVersions();
 
     expect($versions)->toContain('v1.0');
     expect($versions)->not->toContain('v0.8-alpha');

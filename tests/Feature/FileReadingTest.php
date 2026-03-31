@@ -31,7 +31,7 @@ it('handles documents with invalid YAML front matter', function () {
     // Mock the Log facade to capture warnings
     Log::shouldReceive('warning')
         ->once()
-        ->with('Failed to parse front matter', \Mockery::type('array'));
+        ->with('Failed to parse front matter', Mockery::type('array'));
 
     $service = DocumentationService::make();
     $doc = $service->get('en', 'invalid-yaml');
@@ -161,7 +161,7 @@ it('handles file reading errors gracefully', function () {
 
         // Should handle the error gracefully
         expect(fn () => $service->get('en', 'test-permissions'))
-            ->toThrow(\Exception::class);
+            ->toThrow(Exception::class);
 
         // Restore permissions for cleanup
         chmod($filePath, 0644);

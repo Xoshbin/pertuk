@@ -128,7 +128,8 @@ html {
 }
 
 .docs-content pre {
-    @apply bg-gray-50 dark:bg-gray-900 rounded-lg p-4 overflow-x-auto my-4 border border-gray-200 dark:border-gray-700;
+    @apply bg-gray-50 dark:bg-gray-900 rounded-xl p-4 overflow-x-auto my-6 border border-gray-200 dark:border-gray-700;
+    white-space: pre !important;
 }
 
 .docs-content code {
@@ -137,6 +138,7 @@ html {
 
 .docs-content pre code {
     @apply bg-transparent p-0 text-sm;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
 }
 
 /* ASCII Art Support */
@@ -257,14 +259,32 @@ html {
     @apply absolute top-0 right-0 px-3 py-1 text-[10px] font-bold tracking-wider text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/40 rounded-bl-lg uppercase;
 }
 
-.docs-content pre[class*="language-"] {
-    @apply relative;
+.docs-content pre[class*="language-"],
+.docs-content pre.shiki {
+    @apply relative pt-8;
 }
 
 .docs-content pre[class*="language-"]::before {
     content: attr(data-language);
-    @apply absolute top-2 right-2 text-xs text-gray-500 dark:text-gray-400 uppercase font-mono;
+    @apply absolute top-3 right-4 text-[10px] font-bold tracking-widest text-gray-400 dark:text-gray-500 uppercase font-mono;
 }
+
+/* Fallback labels for Shiki classes if data-language is missing */
+.docs-content pre.language-json::before { content: "JSON"; }
+.docs-content pre.language-javascript::before { content: "JS"; }
+.docs-content pre.language-js::before { content: "JS"; }
+.docs-content pre.language-typescript::before { content: "TS"; }
+.docs-content pre.language-ts::before { content: "TS"; }
+.docs-content pre.language-php::before { content: "PHP"; }
+.docs-content pre.language-css::before { content: "CSS"; }
+.docs-content pre.language-html::before { content: "HTML"; }
+.docs-content pre.language-bash::before { content: "BASH"; }
+.docs-content pre.language-sh::before { content: "SH"; }
+.docs-content pre.language-yaml::before { content: "YAML"; }
+.docs-content pre.language-yml::before { content: "YAML"; }
+.docs-content pre.language-markdown::before { content: "MD"; }
+.docs-content pre.language-md::before { content: "MD"; }
+.docs-content pre.language-rust::before { content: "RUST"; }
 
 .docs-content .code-block-wrapper {
     @apply relative;

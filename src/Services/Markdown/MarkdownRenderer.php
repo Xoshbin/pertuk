@@ -36,6 +36,9 @@ class MarkdownRenderer
         // Register Admonition extension for ::: tip, ::: warning, ::: danger
         $env->addExtension(new AdmonitionExtension);
 
+        // Register ASCII Art extension for ```ascii
+        $env->addExtension(new \Xoshbin\Pertuk\Extensions\Ascii\AsciiExtension());
+
         // Register custom components (tabs, accordion)
         $env->addExtension(new ComponentExtension);
 

@@ -2,6 +2,17 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.1.6 - 2026-03-31
+
+### What's Changed
+
+* feat: add theme configuration and support for system-based color scheme switching by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/15
+* feat: add AsciiExtension to render ascii-art code blocks with custom styling by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/16
+* feat: improve code block styling and add markdown rendering feature tests by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/17
+* chore: update Tailwind CSS distribution and source files to v4.1.13 by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/18
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/0.1.5...v0.1.6
+
 ## v0.1.5 - 2026-02-07
 
 1. make package links dynamic by moving them to

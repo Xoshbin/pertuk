@@ -128,14 +128,15 @@ class DocsManager {
 
         // Check for saved theme preference or default to config-driven initial theme
         const configTheme = window.pertukThemeConfig || "system";
-        const savedTheme = localStorage.getItem("theme") || configTheme;
+        // If config forces a theme (non-system), use it regardless of localStorage
+        const savedTheme = configTheme !== "system" ? configTheme : (localStorage.getItem("theme") || "system");
 
         // Apply theme immediately
         this.applyTheme(savedTheme);
 
         themeToggle.addEventListener("click", () => {
             const themes = ["light", "dark", "system"];
-            const currentTheme = localStorage.getItem("theme") || configTheme;
+            const currentTheme = configTheme !== "system" ? configTheme : (localStorage.getItem("theme") || configTheme);
             const currentIndex = themes.indexOf(currentTheme);
             const nextIndex = (currentIndex + 1) % themes.length;
             const newTheme = themes[nextIndex];
@@ -147,7 +148,7 @@ class DocsManager {
 
         // Listen for system theme changes if set to system
         window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-            const currentTheme = localStorage.getItem("theme") || configTheme;
+            const currentTheme = configTheme !== "system" ? configTheme : (localStorage.getItem("theme") || configTheme);
             if (currentTheme === "system") {
                 this.applyTheme("system");
             }

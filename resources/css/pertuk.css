@@ -139,6 +139,29 @@ html {
     @apply bg-transparent p-0 text-sm;
 }
 
+/* ASCII Art Support */
+.docs-content .ascii-art-container {
+    @apply bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto my-8 p-6 shadow-sm;
+}
+
+.docs-content .ascii-art {
+    @apply font-mono text-sm block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    white-space: pre !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
+    /* Perfect line-height for ASCII art connections */
+    line-height: 1.15 !important;
+}
+
+[dir="rtl"] .docs-content .ascii-art-container,
+[dir="rtl"] .docs-content .ascii-art {
+    @apply text-left;
+    direction: ltr !important;
+}
+
 .docs-content table {
     @apply w-full border-collapse border border-gray-200 dark:border-gray-700 my-4;
 }

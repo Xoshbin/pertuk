@@ -124,23 +124,33 @@ class DocsManager {
      */
     initThemeToggle() {
         const themeToggle = document.getElementById("theme-toggle");
-        const html = document.documentElement;
-
         if (!themeToggle) return;
 
-        // Check for saved theme preference or default to 'light'
-        const savedTheme = localStorage.getItem("theme") || "light";
+        // Check for saved theme preference or default to config-driven initial theme
+        const configTheme = window.pertukThemeConfig || "system";
+        const savedTheme = localStorage.getItem("theme") || configTheme;
 
         // Apply theme immediately
         this.applyTheme(savedTheme);
 
         themeToggle.addEventListener("click", () => {
-            const currentTheme = localStorage.getItem("theme") || "light";
-            const newTheme = currentTheme === "dark" ? "light" : "dark";
+            const themes = ["light", "dark", "system"];
+            const currentTheme = localStorage.getItem("theme") || configTheme;
+            const currentIndex = themes.indexOf(currentTheme);
+            const nextIndex = (currentIndex + 1) % themes.length;
+            const newTheme = themes[nextIndex];
 
             // Apply the new theme
             this.applyTheme(newTheme);
             localStorage.setItem("theme", newTheme);
+        });
+
+        // Listen for system theme changes if set to system
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+            const currentTheme = localStorage.getItem("theme") || configTheme;
+            if (currentTheme === "system") {
+                this.applyTheme("system");
+            }
         });
     }
 
@@ -149,14 +159,35 @@ class DocsManager {
      */
     applyTheme(theme) {
         const html = document.documentElement;
+        let isDark = false;
 
         if (theme === "dark") {
+            isDark = true;
+        } else if (theme === "system") {
+            isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        } else {
+            isDark = false;
+        }
+
+        if (isDark) {
             html.classList.add("dark");
         } else {
             html.classList.remove("dark");
         }
 
-        // Force a repaint to ensure styles are applied
+        // Update icons if the theme-toggle exists
+        const themeToggle = document.getElementById("theme-toggle");
+        if (themeToggle) {
+            const sunIcon = themeToggle.querySelector(".sun-icon");
+            const moonIcon = themeToggle.querySelector(".moon-icon");
+            const monitorIcon = themeToggle.querySelector(".monitor-icon");
+
+            if (sunIcon) sunIcon.classList.toggle("hidden", theme !== "light");
+            if (moonIcon) moonIcon.classList.toggle("hidden", theme !== "dark");
+            if (monitorIcon) monitorIcon.classList.toggle("hidden", theme !== "system");
+        }
+
+        // Force a repaint
         html.offsetHeight;
     }
 

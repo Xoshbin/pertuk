@@ -11,6 +11,7 @@ use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use League\CommonMark\MarkdownConverter;
 use Spatie\CommonMarkShikiHighlighter\HighlightCodeExtension;
 use Xoshbin\Pertuk\Extensions\Admonition\AdmonitionExtension;
+use Xoshbin\Pertuk\Extensions\Ascii\AsciiExtension;
 use Xoshbin\Pertuk\Extensions\Component\ComponentExtension;
 
 class MarkdownRenderer
@@ -37,7 +38,7 @@ class MarkdownRenderer
         $env->addExtension(new AdmonitionExtension);
 
         // Register ASCII Art extension for ```ascii
-        $env->addExtension(new \Xoshbin\Pertuk\Extensions\Ascii\AsciiExtension());
+        $env->addExtension(new AsciiExtension);
 
         // Register custom components (tabs, accordion)
         $env->addExtension(new ComponentExtension);

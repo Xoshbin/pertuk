@@ -14,6 +14,6 @@ final class AsciiExtension implements ExtensionInterface
     {
         // Add with high priority to run BEFORE the Shiki Highlighter renderer
         // Shiki uses default priority (0)
-        $environment->addRenderer(FencedCode::class, new AsciiCodeRenderer(), 100);
+        $environment->addRenderer(FencedCode::class, new AsciiCodeRenderer, 100);
     }
 }

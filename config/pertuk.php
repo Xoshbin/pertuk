@@ -48,6 +48,10 @@ return [
         'ar' => 'العربية',
     ],
 
+    // Theme settings
+    // Options: 'light', 'dark', 'system'
+    'theme' => 'system',
+
     // GitHub Repo & Branch for "Edit on GitHub" links
     'github_repo' => env('PERTUK_GITHUB_REPO', 'username/repo'), // @phpstan-ignore-line
     'github_branch' => env('PERTUK_GITHUB_BRANCH', 'main'), // @phpstan-ignore-line

@@ -12,7 +12,36 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $theme = config('pertuk.theme', 'system');
+        $initialDark = $theme === 'dark';
+    @endphp
     <title>{{ $title ? $title . ' · ' . config('app.name') : __('Docs') . ' · ' . config('app.name') }}</title>
+    
+    <script>
+        (function() {
+            const theme = @js($theme);
+            window.pertukThemeConfig = theme;
+            const savedTheme = localStorage.getItem('theme');
+            
+            // If theme is NOT system, it's forced by the developer
+            const activeTheme = theme !== 'system' ? theme : (savedTheme || 'system');
+            
+            let isDark = false;
+            if (activeTheme === 'dark') {
+                isDark = true;
+            } else if (activeTheme === 'system') {
+                isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
     {!! \Xoshbin\Pertuk\Facades\Pertuk::css() !!}
     {!! \Xoshbin\Pertuk\Facades\Pertuk::js() !!}
 </head>

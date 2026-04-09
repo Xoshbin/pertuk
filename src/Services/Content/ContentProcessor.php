@@ -17,6 +17,16 @@ class ContentProcessor
      */
     public function injectHeadingIdsAndToc(string $html): array
     {
+        // Protect <pre> blocks from DOMDocument whitespace normalisation, which
+        // differs across libxml2 versions and corrupts code block line breaks.
+        $preBlocks = [];
+        $html = (string) preg_replace_callback('/<pre\b[^>]*>.*?<\/pre>/si', function ($m) use (&$preBlocks) {
+            $placeholder = '<!--PERTUK_PRE_'.count($preBlocks).'-->';
+            $preBlocks[] = $m[0];
+
+            return $placeholder;
+        }, $html);
+
         $dom = $this->createDomDocument($html);
         $xpath = new DOMXPath($dom);
 
@@ -82,6 +92,11 @@ class ContentProcessor
             // If body is missing, it implies empty or malformed content that resulted in no body tag.
             // Returning empty string is safer than dumping the whole DOM with DOCTYPE.
             $innerHtml = '';
+        }
+
+        // Restore protected <pre> blocks
+        foreach ($preBlocks as $i => $preHtml) {
+            $innerHtml = str_replace('<!--PERTUK_PRE_'.$i.'-->', $preHtml, $innerHtml);
         }
 
         return [$innerHtml, $toc];

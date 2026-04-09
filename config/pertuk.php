@@ -6,6 +6,27 @@ return [
     // per-locale folders (e.g., docs/en/payments.md, docs/ar/payments.md).
     'root' => base_path('docs'),
 
+    // Source driver selection. 'local' reads from the filesystem; 'github'
+    // syncs a GitHub repo subdirectory into storage and reads from there.
+    'source' => env('PERTUK_SOURCE', 'local'),
+
+    // Per-driver configuration.
+    // Note: sources.github.* (PERTUK_DOCS_*) controls WHERE docs are fetched from.
+    // The github_repo/github_branch keys below (PERTUK_GITHUB_*) drive "Edit on GitHub" links—separate concerns.
+    'sources' => [
+        'local' => [
+            // Overrides the legacy top-level 'root' key when set.
+            'root' => base_path('docs'),
+        ],
+        'github' => [
+            'repo'       => env('PERTUK_DOCS_REPO'),        // e.g. 'Xoshbin/asyar-launcher'
+            'branch'     => env('PERTUK_DOCS_BRANCH', 'main'),
+            'path'       => env('PERTUK_DOCS_PATH', 'docs'),
+            'token'      => env('PERTUK_DOCS_TOKEN'),        // optional PAT for private repos / higher rate limit
+            'cache_path' => storage_path('app/pertuk/github'),
+        ],
+    ],
+
     // Default sort order when front matter 'order' is missing.
     'default_order' => 1000,
 

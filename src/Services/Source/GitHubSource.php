@@ -40,9 +40,9 @@ class GitHubSource implements SourceDriver
 
         if ($tree['truncated']) {
             Log::warning('GitHub tree response was truncated; some files may be missing. Consider filtering by a smaller path.', [
-                'repo'   => $this->repo,
+                'repo' => $this->repo,
                 'branch' => $this->branch,
-                'path'   => $this->path,
+                'path' => $this->path,
             ]);
         }
 
@@ -78,9 +78,9 @@ class GitHubSource implements SourceDriver
         }
 
         $manifest = [
-            'tree_sha'  => $tree['sha'],
+            'tree_sha' => $tree['sha'],
             'synced_at' => now()->toIso8601String(),
-            'files'     => $files,
+            'files' => $files,
         ];
 
         File::put($this->cachePath.'/.manifest.json', json_encode($manifest, JSON_PRETTY_PRINT));

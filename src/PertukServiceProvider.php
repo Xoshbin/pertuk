@@ -6,6 +6,10 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Xoshbin\Pertuk\Pertuk as PertukCore;
 use Xoshbin\Pertuk\Services\DocumentationService;
+use Xoshbin\Pertuk\Services\Source\GitHubClient;
+use Xoshbin\Pertuk\Services\Source\GitHubSource;
+use Xoshbin\Pertuk\Services\Source\LocalSource;
+use Xoshbin\Pertuk\Services\Source\SourceDriver;
 
 class PertukServiceProvider extends PackageServiceProvider
 {
@@ -30,11 +34,11 @@ class PertukServiceProvider extends PackageServiceProvider
         // Bind core services
         $this->app->singleton(PertukCore::class);
 
-        $this->app->singleton(\Xoshbin\Pertuk\Services\Source\SourceDriver::class, function ($app) {
+        $this->app->singleton(SourceDriver::class, function ($app) {
             $source = (string) (config('pertuk.source') ?: 'local');
 
             return match ($source) {
-                'local' => new \Xoshbin\Pertuk\Services\Source\LocalSource,
+                'local' => new LocalSource,
                 'github' => (function () {
                     $cfg = (array) config('pertuk.sources.github', []);
                     $repo = (string) ($cfg['repo'] ?? '');
@@ -43,13 +47,13 @@ class PertukServiceProvider extends PackageServiceProvider
                     $token = $cfg['token'] ?? null;
                     $cachePath = (string) ($cfg['cache_path'] ?? storage_path('app/pertuk/github'));
 
-                    $client = new \Xoshbin\Pertuk\Services\Source\GitHubClient(
+                    $client = new GitHubClient(
                         repo: $repo,
                         branch: $branch,
                         token: is_string($token) ? $token : null,
                     );
 
-                    return new \Xoshbin\Pertuk\Services\Source\GitHubSource(
+                    return new GitHubSource(
                         client: $client,
                         repo: $repo,
                         branch: $branch,

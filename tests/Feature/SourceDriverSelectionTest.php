@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\File;
 use Xoshbin\Pertuk\Services\Source\GitHubSource;
 use Xoshbin\Pertuk\Services\Source\LocalSource;
 use Xoshbin\Pertuk\Services\Source\SourceDriver;
@@ -30,14 +31,14 @@ it('resolves GitHubSource from config when source is github', function () {
     config()->set('pertuk.sources.github.token', null);
     config()->set('pertuk.sources.github.cache_path', $cachePath);
 
-    app()->forgetInstance(\Xoshbin\Pertuk\Services\Source\SourceDriver::class);
+    app()->forgetInstance(SourceDriver::class);
 
     try {
-        $resolved = app(\Xoshbin\Pertuk\Services\Source\SourceDriver::class);
+        $resolved = app(SourceDriver::class);
         expect($resolved)->toBeInstanceOf(GitHubSource::class);
     } finally {
         if (is_dir($cachePath)) {
-            \Illuminate\Support\Facades\File::deleteDirectory($cachePath);
+            File::deleteDirectory($cachePath);
         }
     }
 });

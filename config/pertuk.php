@@ -15,8 +15,10 @@ return [
     // The github_repo/github_branch keys below (PERTUK_GITHUB_*) drive "Edit on GitHub" links—separate concerns.
     'sources' => [
         'local' => [
-            // Overrides the legacy top-level 'root' key when set.
-            'root' => base_path('docs'),
+            // When null, falls back to the legacy top-level 'root' key above.
+            // Set this explicitly (or via PERTUK_DOCS_LOCAL_ROOT env var) to
+            // override where LocalSource reads markdown from.
+            'root' => env('PERTUK_DOCS_LOCAL_ROOT'),
         ],
         'github' => [
             'repo'       => env('PERTUK_DOCS_REPO'),        // e.g. 'Xoshbin/asyar-launcher'

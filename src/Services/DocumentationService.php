@@ -14,6 +14,7 @@ use Spatie\YamlFrontMatter\YamlFrontMatter;
 use Symfony\Component\Finder\SplFileInfo;
 use Xoshbin\Pertuk\Services\Content\ContentProcessor;
 use Xoshbin\Pertuk\Services\Markdown\MarkdownRenderer;
+use Xoshbin\Pertuk\Services\Source\SourceDriver;
 
 class DocumentationService
 {
@@ -22,7 +23,7 @@ class DocumentationService
     private ContentProcessor $contentProcessor;
 
     public function __construct(
-        protected string $root,
+        protected SourceDriver $source,
         protected int $ttl,
         protected ?string $version = null,
         /** @var array<int,string> */
@@ -34,19 +35,20 @@ class DocumentationService
 
     public static function make(?string $version = null): self
     {
-        $root = config('pertuk.root', base_path('docs'));
+        /** @var SourceDriver $driver */
+        $driver = app(SourceDriver::class);
+
         $ttl = (int) config('pertuk.cache_ttl', 3600);
         $excludeDirectories = (array) config('pertuk.exclude_directories', []);
-        // 1. Explicit argument
-        // 2. Auto-discover default (latest) if not set
+
         if (! $version) {
-            $available = self::getAvailableVersions();
+            $available = $driver->availableVersions();
             if (! empty($available)) {
                 $version = $available[0];
             }
         }
 
-        return new self($root, $ttl, $version, $excludeDirectories);
+        return new self($driver, $ttl, $version, $excludeDirectories);
     }
 
     public function getVersion(): ?string
@@ -55,48 +57,17 @@ class DocumentationService
     }
 
     /**
-     * Automatically discover available version directories.
+     * Backwards-compatible shim. New code should use
+     * `app(SourceDriver::class)->availableVersions()` directly.
      *
      * @return array<int,string>
      */
     public static function getAvailableVersions(): array
     {
-        $root = config('pertuk.root', base_path('docs'));
-        $excludeVersions = (array) config('pertuk.exclude_versions', []);
+        /** @var SourceDriver $driver */
+        $driver = app(SourceDriver::class);
 
-        if (! File::exists($root)) {
-            return [];
-        }
-
-        $directories = File::directories($root);
-        $versions = [];
-
-        foreach ($directories as $directory) {
-            $name = basename($directory);
-            if (in_array($name, $excludeVersions)) {
-                continue;
-            }
-
-            // A valid version directory should contain at least one locale folder
-            $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
-            $hasLocale = false;
-            foreach ($supportedLocales as $locale) {
-                if (File::isDirectory($directory.DIRECTORY_SEPARATOR.$locale)) {
-                    $hasLocale = true;
-                    break;
-                }
-            }
-
-            if ($hasLocale) {
-                $versions[] = $name;
-            }
-        }
-
-        // Sort versions naturally (e.g., v10 > v2)
-        usort($versions, 'strnatcmp');
-
-        // Reverse to have latest version first
-        return array_reverse($versions);
+        return $driver->availableVersions();
     }
 
     /**
@@ -163,13 +134,14 @@ class DocumentationService
      */
     protected function getFiles(string $locale): Collection
     {
+        $root = $this->source->rootPath();
         $versionPart = $this->version ? $this->version.DIRECTORY_SEPARATOR : '';
-        $dir = $this->root.DIRECTORY_SEPARATOR.$versionPart.$locale;
+        $dir = $root.DIRECTORY_SEPARATOR.$versionPart.$locale;
 
         if (! File::exists($dir)) {
             // Fallback to non-versioned locale folder if versioned one doesn't exist
             if ($this->version) {
-                $flatDir = $this->root.DIRECTORY_SEPARATOR.$locale;
+                $flatDir = $root.DIRECTORY_SEPARATOR.$locale;
                 if (File::exists($flatDir)) {
                     $dir = $flatDir;
                 } else {
@@ -211,6 +183,20 @@ class DocumentationService
      */
     public function get(string $locale, string $slug): array
     {
+        // Compute the expected relative path and let the source driver
+        // hydrate it on disk if necessary. For LocalSource this is a no-op.
+        $relative = $this->expectedRelativePath($locale, $slug);
+        try {
+            $this->source->ensureFile($relative);
+        } catch (\Throwable $e) {
+            Log::warning('Source driver failed to hydrate file', [
+                'locale' => $locale,
+                'slug'   => $slug,
+                'error'  => $e->getMessage(),
+            ]);
+            throw new FileNotFoundException("Doc not found for [{$locale}] slug: {$slug}");
+        }
+
         $path = $this->resolvePath($locale, $slug);
         if (! $path || ! File::exists($path)) {
             throw new FileNotFoundException("Doc not found for [{$locale}] slug: {$slug}");
@@ -354,8 +340,9 @@ class DocumentationService
 
     protected function resolvePath(string $locale, string $slug): ?string
     {
+        $root = $this->source->rootPath();
         $versionPart = $this->version ? $this->version.DIRECTORY_SEPARATOR : '';
-        $path = $this->root.DIRECTORY_SEPARATOR.$versionPart.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
+        $path = $root.DIRECTORY_SEPARATOR.$versionPart.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
 
         if (! Str::endsWith($path, '.md')) {
             $path .= '.md';
@@ -368,7 +355,7 @@ class DocumentationService
         // Fallback to non-versioned path if versioned one doesn't exist
         // This maintains backward compatibility for existing "flat" documentation
         if ($this->version) {
-            $flatPath = $this->root.DIRECTORY_SEPARATOR.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
+            $flatPath = $root.DIRECTORY_SEPARATOR.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
             if (! Str::endsWith($flatPath, '.md')) {
                 $flatPath .= '.md';
             }
@@ -386,7 +373,7 @@ class DocumentationService
      */
     public function getSlugFromPath(string $path): string
     {
-        $root = rtrim($this->root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        $root = rtrim($this->source->rootPath(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
         $rel = Str::after($path, $root);
         // $rel is "v1.0/en/slug.md" or "en/slug.md"
 
@@ -449,5 +436,22 @@ class DocumentationService
         }
 
         return $alternates;
+    }
+
+    /**
+     * Compute the expected relative path (from rootPath()) for a given locale/slug.
+     * Mirrors resolvePath() but returns the relative form, used to ask the source
+     * driver to hydrate a single file before we read it.
+     */
+    protected function expectedRelativePath(string $locale, string $slug): string
+    {
+        $versionPart = $this->version ? $this->version.'/' : '';
+        $rel = $versionPart.$locale.'/'.$slug;
+
+        if (! Str::endsWith($rel, '.md')) {
+            $rel .= '.md';
+        }
+
+        return $rel;
     }
 }

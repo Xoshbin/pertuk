@@ -154,12 +154,13 @@ class DocumentController extends Controller
     public function asset(Request $request): BinaryFileResponse
     {
         $path = (string) $request->route('path');
-        $assetsPath = (string) config('pertuk.assets_path', 'assets');
-        $root = (string) config('pertuk.root', base_path('docs'));
 
-        $fullPath = $root.DIRECTORY_SEPARATOR.$assetsPath.DIRECTORY_SEPARATOR.$path;
+        /** @var \Xoshbin\Pertuk\Services\Source\SourceDriver $source */
+        $source = app(\Xoshbin\Pertuk\Services\Source\SourceDriver::class);
 
-        if (! file_exists($fullPath) || is_dir($fullPath)) {
+        $fullPath = $source->ensureAsset($path);
+
+        if ($fullPath === null) {
             abort(404);
         }
 

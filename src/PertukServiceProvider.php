@@ -30,6 +30,17 @@ class PertukServiceProvider extends PackageServiceProvider
         // Bind core services
         $this->app->singleton(PertukCore::class);
 
+        $this->app->singleton(\Xoshbin\Pertuk\Services\Source\SourceDriver::class, function ($app) {
+            $source = (string) (config('pertuk.source') ?: 'local');
+
+            return match ($source) {
+                'local' => new \Xoshbin\Pertuk\Services\Source\LocalSource,
+                default => throw new \InvalidArgumentException(
+                    "Unknown pertuk.source driver: [{$source}]. Supported: local, github."
+                ),
+            };
+        });
+
         $this->app->bind(DocumentationService::class, function () {
             return DocumentationService::make();
         });

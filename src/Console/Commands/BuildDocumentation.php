@@ -4,6 +4,7 @@ namespace Xoshbin\Pertuk\Console\Commands;
 
 use Illuminate\Console\Command;
 use Xoshbin\Pertuk\Services\DocumentationService;
+use Xoshbin\Pertuk\Services\Source\SourceDriver;
 
 class BuildDocumentation extends Command
 {
@@ -11,9 +12,22 @@ class BuildDocumentation extends Command
 
     protected $description = 'Pre-render all documentation to the cache to improve performance.';
 
-    public function handle(DocumentationService $docs): int
+    public function handle(SourceDriver $source): int
     {
         $this->info('Starting documentation build...');
+
+        $this->info('Warming documentation source...');
+        try {
+            $source->warmAll();
+        } catch (\Throwable $e) {
+            $this->error('Failed to warm documentation source: '.$e->getMessage());
+
+            return self::FAILURE;
+        }
+
+        // Resolve DocumentationService AFTER warmAll so availableVersions()
+        // picks up any version directories the sync just created.
+        $docs = DocumentationService::make();
 
         $slugs = $docs->discoverAll();
         $count = count($slugs);

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Xoshbin\Pertuk\Services\DocumentationService;
+use Xoshbin\Pertuk\Services\Source\SourceDriver;
 
 class DocumentController extends Controller
 {
@@ -154,12 +155,12 @@ class DocumentController extends Controller
     public function asset(Request $request): BinaryFileResponse
     {
         $path = (string) $request->route('path');
-        $assetsPath = (string) config('pertuk.assets_path', 'assets');
-        $root = (string) config('pertuk.root', base_path('docs'));
 
-        $fullPath = $root.DIRECTORY_SEPARATOR.$assetsPath.DIRECTORY_SEPARATOR.$path;
+        $source = app(SourceDriver::class);
 
-        if (! file_exists($fullPath) || is_dir($fullPath)) {
+        $fullPath = $source->ensureAsset($path);
+
+        if ($fullPath === null) {
             abort(404);
         }
 

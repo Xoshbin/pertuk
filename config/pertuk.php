@@ -21,10 +21,10 @@ return [
             'root' => env('PERTUK_DOCS_LOCAL_ROOT'),
         ],
         'github' => [
-            'repo'       => env('PERTUK_DOCS_REPO'),        // e.g. 'Xoshbin/asyar-launcher'
-            'branch'     => env('PERTUK_DOCS_BRANCH', 'main'),
-            'path'       => env('PERTUK_DOCS_PATH', 'docs'),
-            'token'      => env('PERTUK_DOCS_TOKEN'),        // optional PAT for private repos / higher rate limit
+            'repo' => env('PERTUK_DOCS_REPO'),        // e.g. 'Xoshbin/asyar-launcher'
+            'branch' => env('PERTUK_DOCS_BRANCH', 'main'),
+            'path' => env('PERTUK_DOCS_PATH', 'docs'),
+            'token' => env('PERTUK_DOCS_TOKEN'),        // optional PAT for private repos / higher rate limit
             'cache_path' => storage_path('app/pertuk/github'),
         ],
     ],

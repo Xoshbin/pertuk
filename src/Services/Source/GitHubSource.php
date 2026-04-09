@@ -9,6 +9,8 @@ use InvalidArgumentException;
 
 class GitHubSource implements SourceDriver
 {
+    use ScansVersions;
+
     public function __construct(
         protected GitHubClient $client,
         protected string $repo,
@@ -50,7 +52,7 @@ class GitHubSource implements SourceDriver
             }
 
             $relative = substr($repoPath, $prefixLen);
-            if ($relative === '' || $relative === false) {
+            if ($relative === '') {
                 continue;
             }
 
@@ -66,9 +68,9 @@ class GitHubSource implements SourceDriver
         }
 
         $manifest = [
-            'tree_sha'  => (string) ($tree['sha'] ?? ''),
+            'tree_sha' => $tree['sha'],
             'synced_at' => now()->toIso8601String(),
-            'files'     => $files,
+            'files' => $files,
         ];
 
         File::put($this->cachePath.'/.manifest.json', json_encode($manifest, JSON_PRETTY_PRINT));
@@ -90,9 +92,9 @@ class GitHubSource implements SourceDriver
         }
 
         return [
-            'tree_sha'  => (string) ($decoded['tree_sha'] ?? ''),
+            'tree_sha' => (string) ($decoded['tree_sha'] ?? ''),
             'synced_at' => (string) ($decoded['synced_at'] ?? ''),
-            'files'     => (array) ($decoded['files'] ?? []),
+            'files' => (array) ($decoded['files'] ?? []),
         ];
     }
 
@@ -105,18 +107,59 @@ class GitHubSource implements SourceDriver
 
     public function ensureFile(string $relativePath): void
     {
-        // Implemented in Task 15.
+        $relative = ltrim($relativePath, '/');
+
+        // Guard against traversal: the resolved path must sit inside cachePath.
+        $absolute = $this->cachePath.DIRECTORY_SEPARATOR.$relative;
+        if (str_contains($relative, '..')) {
+            return;
+        }
+
+        if (File::exists($absolute)) {
+            return;
+        }
+
+        $repoPath = rtrim($this->path, '/').'/'.$relative;
+        $contents = $this->client->fetchRaw($repoPath);
+        $this->writeFile($relative, $contents);
     }
 
     public function ensureAsset(string $relativePath): ?string
     {
-        // Implemented in Task 16.
-        return null;
+        if (str_contains($relativePath, '..')) {
+            return null;
+        }
+
+        $assetsPath = (string) config('pertuk.assets_path', 'assets');
+        $relative = trim($assetsPath, '/').'/'.ltrim($relativePath, '/');
+        $absolute = $this->cachePath.DIRECTORY_SEPARATOR.$relative;
+
+        if (! File::exists($absolute)) {
+            try {
+                $repoPath = rtrim($this->path, '/').'/'.$relative;
+                $contents = $this->client->fetchRaw($repoPath);
+            } catch (\Throwable) {
+                return null;
+            }
+
+            $this->writeFile($relative, $contents);
+        }
+
+        $real = realpath($absolute);
+        if ($real === false) {
+            return null;
+        }
+
+        $realBase = realpath($this->cachePath);
+        if ($realBase === false || (! str_starts_with($real, $realBase.DIRECTORY_SEPARATOR) && $real !== $realBase)) {
+            return null;
+        }
+
+        return is_file($real) ? $real : null;
     }
 
     public function availableVersions(): array
     {
-        // Implemented in Task 17.
-        return [];
+        return $this->scanVersions($this->rootPath());
     }
 }

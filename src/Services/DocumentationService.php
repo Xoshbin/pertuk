@@ -191,8 +191,8 @@ class DocumentationService
         } catch (\Throwable $e) {
             Log::warning('Source driver failed to hydrate file', [
                 'locale' => $locale,
-                'slug'   => $slug,
-                'error'  => $e->getMessage(),
+                'slug' => $slug,
+                'error' => $e->getMessage(),
             ]);
             throw new FileNotFoundException("Doc not found for [{$locale}] slug: {$slug}");
         }

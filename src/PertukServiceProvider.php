@@ -35,6 +35,28 @@ class PertukServiceProvider extends PackageServiceProvider
 
             return match ($source) {
                 'local' => new \Xoshbin\Pertuk\Services\Source\LocalSource,
+                'github' => (function () {
+                    $cfg = (array) config('pertuk.sources.github', []);
+                    $repo = (string) ($cfg['repo'] ?? '');
+                    $branch = (string) ($cfg['branch'] ?? 'main');
+                    $path = (string) ($cfg['path'] ?? 'docs');
+                    $token = $cfg['token'] ?? null;
+                    $cachePath = (string) ($cfg['cache_path'] ?? storage_path('app/pertuk/github'));
+
+                    $client = new \Xoshbin\Pertuk\Services\Source\GitHubClient(
+                        repo: $repo,
+                        branch: $branch,
+                        token: is_string($token) ? $token : null,
+                    );
+
+                    return new \Xoshbin\Pertuk\Services\Source\GitHubSource(
+                        client: $client,
+                        repo: $repo,
+                        branch: $branch,
+                        path: $path,
+                        cachePath: $cachePath,
+                    );
+                })(),
                 default => throw new \InvalidArgumentException(
                     "Unknown pertuk.source driver: [{$source}]. Supported: local, github."
                 ),

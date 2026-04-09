@@ -85,6 +85,23 @@ return [
 ];
 ```
 
+### GitHub source (alternative to local files)
+
+Pertuk can render markdown stored in a GitHub repository instead of the local filesystem. Set `PERTUK_SOURCE=github` and configure the repo, branch, and path. The package syncs the full directory tree into `storage/app/pertuk/github/` during `pertuk:build` and falls back to on-demand single-file fetches at runtime for anything not yet synced.
+
+```env
+PERTUK_SOURCE=github
+PERTUK_DOCS_REPO=Xoshbin/asyar-launcher
+PERTUK_DOCS_BRANCH=main
+PERTUK_DOCS_PATH=docs
+# Optional — required for private repos, recommended for public repos to avoid the 60/hr anonymous rate limit.
+PERTUK_DOCS_TOKEN=ghp_xxx
+```
+
+Versioning, multi-locale, assets, and search all work identically to the local driver because the synced tree mirrors the repo's directory structure.
+
+Run `php artisan pertuk:build` as part of your deploy to sync changes. Files added upstream after the last sync are fetched on first request; modified or deleted files require another `pertuk:build`.
+
 ## Quick start
 
 1. Install the package:

@@ -2,6 +2,20 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **GitHub documentation source.** Pertuk can now render markdown from a GitHub repository instead of a local directory. Set `PERTUK_SOURCE=github` and configure `PERTUK_DOCS_REPO`, `PERTUK_DOCS_BRANCH`, `PERTUK_DOCS_PATH`, and optionally `PERTUK_DOCS_TOKEN`. See README for details.
+- New `Xoshbin\Pertuk\Services\Source\SourceDriver` interface with `LocalSource` (default) and `GitHubSource` implementations. Registered as a singleton in the container.
+
+### Changed
+- `DocumentationService` now reads its root path from the bound `SourceDriver` instead of `config('pertuk.root')` directly. `DocumentationService::getAvailableVersions()` is now a thin shim that delegates to the driver.
+- `DocumentController::asset()` delegates asset resolution to `SourceDriver::ensureAsset()` so the GitHub driver can download and cache missing assets on demand.
+- `php artisan pertuk:build` now calls `SourceDriver::warmAll()` before pre-rendering — a no-op for the local driver, a full tree sync for the GitHub driver.
+
+### Deprecated
+- The top-level `pertuk.root` config key. Use `pertuk.sources.local.root` instead. The legacy key continues to work as a fallback and will be removed in a future major release.
+
 ## v0.1.6 - 2026-03-31
 
 ### What's Changed

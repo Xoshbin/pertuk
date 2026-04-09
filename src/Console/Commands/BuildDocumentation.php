@@ -12,12 +12,22 @@ class BuildDocumentation extends Command
 
     protected $description = 'Pre-render all documentation to the cache to improve performance.';
 
-    public function handle(DocumentationService $docs, SourceDriver $source): int
+    public function handle(SourceDriver $source): int
     {
         $this->info('Starting documentation build...');
 
         $this->info('Warming documentation source...');
-        $source->warmAll();
+        try {
+            $source->warmAll();
+        } catch (\Throwable $e) {
+            $this->error('Failed to warm documentation source: '.$e->getMessage());
+
+            return self::FAILURE;
+        }
+
+        // Resolve DocumentationService AFTER warmAll so availableVersions()
+        // picks up any version directories the sync just created.
+        $docs = DocumentationService::make();
 
         $slugs = $docs->discoverAll();
         $count = count($slugs);

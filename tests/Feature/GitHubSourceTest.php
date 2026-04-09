@@ -279,6 +279,22 @@ it('ensureAsset rejects path traversal', function () {
     expect($source->ensureAsset('../secret.txt'))->toBeNull();
 });
 
+it('ensureFile rejects path traversal without calling HTTP', function () {
+    Http::fake();
+
+    $source = new GitHubSource(
+        client: new GitHubClient('acme/docs', 'main', token: null),
+        repo: 'acme/docs',
+        branch: 'main',
+        path: 'docs',
+        cachePath: $this->ghCachePath,
+    );
+
+    $source->ensureFile('../etc/passwd');
+
+    Http::assertNothingSent();
+});
+
 it('availableVersions scans the cache path for version folders containing a locale', function () {
     config()->set('pertuk.supported_locales', ['en']);
     config()->set('pertuk.exclude_versions', []);

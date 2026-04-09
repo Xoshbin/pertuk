@@ -21,17 +21,23 @@ it('resolves LocalSource by default when source config is absent', function () {
 });
 
 it('resolves GitHubSource from config when source is github', function () {
+    $cachePath = sys_get_temp_dir().'/pertuk-cfg-'.uniqid();
+
     config()->set('pertuk.source', 'github');
     config()->set('pertuk.sources.github.repo', 'acme/docs');
     config()->set('pertuk.sources.github.branch', 'main');
     config()->set('pertuk.sources.github.path', 'docs');
     config()->set('pertuk.sources.github.token', null);
-    config()->set('pertuk.sources.github.cache_path', sys_get_temp_dir().'/pertuk-cfg-'.uniqid());
+    config()->set('pertuk.sources.github.cache_path', $cachePath);
 
-    // Force the container to re-resolve the singleton under the new config.
     app()->forgetInstance(\Xoshbin\Pertuk\Services\Source\SourceDriver::class);
 
-    $resolved = app(\Xoshbin\Pertuk\Services\Source\SourceDriver::class);
-
-    expect($resolved)->toBeInstanceOf(GitHubSource::class);
+    try {
+        $resolved = app(\Xoshbin\Pertuk\Services\Source\SourceDriver::class);
+        expect($resolved)->toBeInstanceOf(GitHubSource::class);
+    } finally {
+        if (is_dir($cachePath)) {
+            \Illuminate\Support\Facades\File::deleteDirectory($cachePath);
+        }
+    }
 });

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Xoshbin\Pertuk\Services\Source;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 class GitHubSource implements SourceDriver
@@ -37,7 +38,16 @@ class GitHubSource implements SourceDriver
         $tree = $this->client->fetchTree();
         $previous = $this->readManifest();
 
-        $prefix = rtrim($this->path, '/').'/';
+        if ($tree['truncated']) {
+            Log::warning('GitHub tree response was truncated; some files may be missing. Consider filtering by a smaller path.', [
+                'repo'   => $this->repo,
+                'branch' => $this->branch,
+                'path'   => $this->path,
+            ]);
+        }
+
+        $atRoot = $this->path === '' || $this->path === '/';
+        $prefix = $atRoot ? '' : rtrim($this->path, '/').'/';
         $prefixLen = \strlen($prefix);
 
         $files = [];
@@ -47,11 +57,11 @@ class GitHubSource implements SourceDriver
                 continue;
             }
             $repoPath = (string) ($entry['path'] ?? '');
-            if ($prefix !== '/' && ! str_starts_with($repoPath, $prefix)) {
+            if (! $atRoot && ! str_starts_with($repoPath, $prefix)) {
                 continue;
             }
 
-            $relative = substr($repoPath, $prefixLen);
+            $relative = $atRoot ? $repoPath : substr($repoPath, $prefixLen);
             if ($relative === '') {
                 continue;
             }
@@ -68,9 +78,9 @@ class GitHubSource implements SourceDriver
         }
 
         $manifest = [
-            'tree_sha' => $tree['sha'],
+            'tree_sha'  => $tree['sha'],
             'synced_at' => now()->toIso8601String(),
-            'files' => $files,
+            'files'     => $files,
         ];
 
         File::put($this->cachePath.'/.manifest.json', json_encode($manifest, JSON_PRETTY_PRINT));
@@ -109,11 +119,12 @@ class GitHubSource implements SourceDriver
     {
         $relative = ltrim($relativePath, '/');
 
-        // Guard against traversal: the resolved path must sit inside cachePath.
-        $absolute = $this->cachePath.DIRECTORY_SEPARATOR.$relative;
+        // Early reject obvious traversal.
         if (str_contains($relative, '..')) {
             return;
         }
+
+        $absolute = $this->cachePath.DIRECTORY_SEPARATOR.$relative;
 
         if (File::exists($absolute)) {
             return;
@@ -122,6 +133,19 @@ class GitHubSource implements SourceDriver
         $repoPath = rtrim($this->path, '/').'/'.$relative;
         $contents = $this->client->fetchRaw($repoPath);
         $this->writeFile($relative, $contents);
+
+        // Post-write guard: ensure the resolved path stayed inside cachePath
+        // (defeats symlink-based escapes that slipped past the string check).
+        $real = realpath($absolute);
+        $realBase = realpath($this->cachePath);
+        if ($real === false || $realBase === false
+            || (! str_starts_with($real, $realBase.DIRECTORY_SEPARATOR) && $real !== $realBase)) {
+            // Path escaped the cache dir; remove what we wrote and bail.
+            if ($real !== false && is_file($real)) {
+                @unlink($real);
+            }
+            throw new \RuntimeException("Refusing to ensure file outside cache path: {$relative}");
+        }
     }
 
     public function ensureAsset(string $relativePath): ?string

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Xoshbin\Pertuk\Services\DocumentationService;
+use Xoshbin\Pertuk\Services\Source\SourceDriver;
 
 class DocumentController extends Controller
 {
@@ -155,8 +156,7 @@ class DocumentController extends Controller
     {
         $path = (string) $request->route('path');
 
-        /** @var \Xoshbin\Pertuk\Services\Source\SourceDriver $source */
-        $source = app(\Xoshbin\Pertuk\Services\Source\SourceDriver::class);
+        $source = app(SourceDriver::class);
 
         $fullPath = $source->ensureAsset($path);
 

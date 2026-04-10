@@ -122,6 +122,7 @@ it('passes resolved version to view for generic routes even in fallback', functi
 it('marks the correct version as selected in the UI', function () {
     $this->createTestMarkdownFile('test.md', '# v1.0', '', 'en', 'v1.0');
     $this->createTestMarkdownFile('json-test.md', "```json\n{\n  \"key\": \"value\"\n}\n```", '', 'en', 'v2.0'); // Latest
+    config(['pertuk.versions' => ['v1.0', 'v2.0']]);
 
     // Visit v1.0
     $response = $this->get('/docs/v1.0/test');

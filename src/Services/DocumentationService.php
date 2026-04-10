@@ -152,7 +152,7 @@ class DocumentationService
 
         return collect(File::allFiles($dir))
             ->filter(fn ($file) => Str::endsWith($file->getFilename(), '.md'))
-            ->reject(function ($file) use ($base, $locale) {
+            ->reject(function ($file) use ($base, $locale, $root) {
                 $path = $file->getPathname();
 
                 // If we are scanning the root locale, we must exclude files that
@@ -383,13 +383,13 @@ class DocumentationService
 
         $parts = explode(DIRECTORY_SEPARATOR, $rel);
 
-        // Check if first part is a version
-        if (! empty($parts) && in_array($parts[0], LocaleConfig::versions())) {
+        // Check if first part is a version (explode always yields ≥1 element)
+        if (in_array($parts[0], LocaleConfig::versions())) {
             array_shift($parts);
         }
 
-        // Check if current first part is a secondary locale
-        if (! empty($parts) && LocaleConfig::isSecondary($parts[0])) {
+        // Check if current first part is a secondary locale (array may be empty after the shift above)
+        if ($parts !== [] && LocaleConfig::isSecondary($parts[0])) {
             array_shift($parts);
         }
 
@@ -418,7 +418,7 @@ class DocumentationService
                 $alternates[] = [
                     'locale' => $loc,
                     'label' => LocaleConfig::label($loc),
-                    'url' => PertukUrl::doc($slug, locale: $loc, version: $this->version),
+                    'url' => url(PertukUrl::doc($slug, locale: $loc, version: $this->version)),
                     'active' => $loc === $locale,
                 ];
             }

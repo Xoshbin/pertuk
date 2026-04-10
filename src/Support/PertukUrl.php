@@ -26,6 +26,6 @@ class PertukUrl
             }
         }
 
-        return '/' . implode('/', $parts);
+        return '/'.implode('/', $parts);
     }
 }

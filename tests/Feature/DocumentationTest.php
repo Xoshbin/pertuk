@@ -1,6 +1,7 @@
 <?php
 
 use Xoshbin\Pertuk\Services\DocumentationService;
+use Xoshbin\Pertuk\Support\PertukUrl;
 
 it('renders the docs index with at least one document', function () {
     // Create a test document
@@ -117,7 +118,7 @@ it('renders search input with dynamic data attributes', function () {
     $response->assertOk();
 
     $indexUrl = url('/docs/search.json');
-    $baseUrl = \Xoshbin\Pertuk\Support\PertukUrl::doc('index', locale: 'en');
+    $baseUrl = PertukUrl::doc('index', locale: 'en');
 
     $response->assertSee('data-index-url="'.$indexUrl.'"', false);
     $response->assertSee('data-base-url="'.$baseUrl.'"', false);
@@ -132,7 +133,7 @@ it('renders versioned search input with dynamic data attributes', function () {
     $response->assertOk();
 
     $indexUrl = url('/docs/v10.0/search.json');
-    $baseUrl = \Xoshbin\Pertuk\Support\PertukUrl::doc('index', locale: 'en', version: 'v10.0');
+    $baseUrl = PertukUrl::doc('index', locale: 'en', version: 'v10.0');
 
     $response->assertSee('data-index-url="'.$indexUrl.'"', false);
     $response->assertSee('data-base-url="'.$baseUrl.'"', false);

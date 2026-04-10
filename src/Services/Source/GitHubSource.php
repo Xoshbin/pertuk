@@ -7,12 +7,10 @@ namespace Xoshbin\Pertuk\Services\Source;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
-
 use Xoshbin\Pertuk\Support\LocaleConfig;
 
 class GitHubSource implements SourceDriver
 {
-
     public function __construct(
         protected GitHubClient $client,
         protected string $repo,

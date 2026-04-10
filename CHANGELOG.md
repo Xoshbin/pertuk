@@ -5,16 +5,52 @@ All notable changes to `:package_name` will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Root locale (flat) support — VitePress/Starlight style.** One locale can now be designated `root` in the `locales` config. Its files live directly at the docs root with no subdirectory or URL prefix. Secondary locales keep their `/{code}/` URL prefix. See README for directory layout examples.
+- **`Xoshbin\Pertuk\Support\LocaleConfig`** — centralised accessor for all locale config. Replaces scattered `config('pertuk.supported_locales')`, `config('pertuk.rtl_locales')`, etc. calls throughout views and services.
+- **`Xoshbin\Pertuk\Support\PathResolver`** — single resolution point that parses any incoming URL path into `[locale, version, slug]` using the Starlight routing algorithm (root locale = path not starting with a secondary locale prefix).
+- **`Xoshbin\Pertuk\Support\PertukUrl`** — URL generation helper. Root locale gets no locale prefix; secondary locales get `/{code}/`. Use `PertukUrl::doc($slug)` in views instead of `route('pertuk.docs.show', [...])`.
+- **`versions` config key.** Declare the versions you want to expose as an explicit array (`['v1.0', 'v2.0']`). Empty array disables versioning.
 - **GitHub documentation source.** Pertuk can now render markdown from a GitHub repository instead of a local directory. Set `PERTUK_SOURCE=github` and configure `PERTUK_DOCS_REPO`, `PERTUK_DOCS_BRANCH`, `PERTUK_DOCS_PATH`, and optionally `PERTUK_DOCS_TOKEN`. See README for details.
 - New `Xoshbin\Pertuk\Services\Source\SourceDriver` interface with `LocalSource` (default) and `GitHubSource` implementations. Registered as a singleton in the container.
 
 ### Changed
+- **`locales` config key replaces the old locale keys** (see Breaking Changes).
+- Routing simplified to a single catch-all route `/{path?}` delegating to `PathResolver`. Explicit per-locale/per-version routes removed.
+- `DocumentationService::getFiles()` now correctly excludes secondary locale subdirectories from root locale listings, and vice versa.
 - `DocumentationService` now reads its root path from the bound `SourceDriver` instead of `config('pertuk.root')` directly. `DocumentationService::getAvailableVersions()` is now a thin shim that delegates to the driver.
 - `DocumentController::asset()` delegates asset resolution to `SourceDriver::ensureAsset()` so the GitHub driver can download and cache missing assets on demand.
 - `php artisan pertuk:build` now calls `SourceDriver::warmAll()` before pre-rendering — a no-op for the local driver, a full tree sync for the GitHub driver.
 
+### Removed
+- `Xoshbin\Pertuk\Services\Source\ScansVersions` trait — replaced by the explicit `versions` config array.
+
 ### Deprecated
 - The top-level `pertuk.root` config key. Use `pertuk.sources.local.root` instead. The legacy key continues to work as a fallback and will be removed in a future major release.
+
+### Breaking Changes
+- **`locales` map replaces four separate config keys.** Replace:
+  ```php
+  // Before
+  'supported_locales' => ['en', 'ar'],
+  'default_locale'    => 'en',
+  'rtl_locales'       => ['ar'],
+  'locale_labels'     => ['en' => 'English', 'ar' => 'العربية'],
+
+  // After (classic prefix mode — no file moves required)
+  'locales' => [
+      'en' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
+      'ar' => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
+  ],
+  ```
+  To enable root locale (flat layout), use the `root` key instead of a locale code for the primary language:
+  ```php
+  'locales' => [
+      'root' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
+      'ar'   => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
+  ],
+  ```
+- **`exclude_versions` config key removed.** Replace with an explicit `versions` array listing only the versions you want to expose.
+- **Published views** using `route('pertuk.docs.show', ['locale' => ..., 'slug' => ...])` must be updated to use `\Xoshbin\Pertuk\Support\PertukUrl::doc($slug)`. Re-publish with `php artisan vendor:publish --tag="pertuk-views" --force` or update manually.
 
 ## v0.1.6 - 2026-03-31
 

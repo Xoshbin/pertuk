@@ -65,6 +65,11 @@ class TestCase extends Orchestra
                 'lang' => 'ar',
                 'dir' => 'rtl',
             ],
+            'ckb' => [
+                'label' => 'کوردی (سۆرانی)',
+                'lang' => 'ckb',
+                'dir' => 'rtl',
+            ],
         ]);
         config()->set('pertuk.versions', []);
 

@@ -152,7 +152,7 @@ class DocumentationService
 
         return collect(File::allFiles($dir))
             ->filter(fn ($file) => Str::endsWith($file->getFilename(), '.md'))
-            ->reject(function ($file) use ($base, $locale) {
+            ->reject(function ($file) use ($base, $locale, $root) {
                 $path = $file->getPathname();
 
                 // If we are scanning the root locale, we must exclude files that
@@ -418,7 +418,7 @@ class DocumentationService
                 $alternates[] = [
                     'locale' => $loc,
                     'label' => LocaleConfig::label($loc),
-                    'url' => PertukUrl::doc($slug, locale: $loc, version: $this->version),
+                    'url' => url(PertukUrl::doc($slug, locale: $loc, version: $this->version)),
                     'active' => $loc === $locale,
                 ];
             }

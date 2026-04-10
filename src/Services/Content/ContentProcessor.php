@@ -90,9 +90,10 @@ class ContentProcessor
                 $innerHtml .= $dom->saveHTML($child);
             }
         } else {
-            // If body is missing, it implies empty or malformed content that resulted in no body tag.
-            // Returning empty string is safer than dumping the whole DOM with DOCTYPE.
-            $innerHtml = '';
+            // DOMDocument doesn't create a <body> when the content is only comment
+            // nodes (i.e. all real content was extracted into $preBlocks). Fall back
+            // to the placeholder HTML so the restoration step below can work.
+            $innerHtml = ! empty($preBlocks) ? $html : '';
         }
 
         // Restore protected <pre> blocks

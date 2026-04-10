@@ -3,13 +3,17 @@
 use Xoshbin\Pertuk\Services\Source\SourceDriver;
 
 it('the pertuk:build command invokes warmAll on the bound source driver', function () {
-    $spy = new class implements SourceDriver
+    $docsPath = $this->getTestDocsPath();
+
+    $spy = new class($docsPath) implements SourceDriver
     {
         public int $warmAllCalls = 0;
 
+        public function __construct(private string $path) {}
+
         public function rootPath(): string
         {
-            return sys_get_temp_dir();
+            return $this->path;
         }
 
         public function warmAll(): void

@@ -2,6 +2,14 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v1.0.2 - 2026-04-10
+
+### What's Changed
+
+* fix: preserve <pre> wrapper when Shiki is unavailable in production by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/23
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/v1.0.1...v1.0.2
+
 ## v1.0.1 - 2026-04-10
 
 ### What's Changed
@@ -69,6 +77,7 @@ All notable changes to `:package_name` will be documented in this file.
   ],
   
   
+  
   ```
   To enable root locale (flat layout), use the `root` key instead of a locale code for the primary language:
   ```php
@@ -76,6 +85,7 @@ All notable changes to `:package_name` will be documented in this file.
       'root' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
       'ar'   => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
   ],
+  
   
   
   ```

@@ -12,6 +12,9 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Xoshbin\Pertuk\Services\DocumentationService;
+use Xoshbin\Pertuk\Support\LocaleConfig;
+use Xoshbin\Pertuk\Support\PathResolver;
+use Xoshbin\Pertuk\Support\PertukUrl;
 
 class LocaleController extends Controller
 {
@@ -20,9 +23,7 @@ class LocaleController extends Controller
      */
     public function setLocale(Request $request, string $locale): Response|JsonResponse|RedirectResponse
     {
-        $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
-
-        if (! in_array($locale, $supportedLocales, true)) {
+        if (! in_array($locale, LocaleConfig::allLangs(), true)) {
             return response('Invalid locale', 400);
         }
 
@@ -49,7 +50,7 @@ class LocaleController extends Controller
         }
 
         // Fallback to default docs index
-        return redirect()->route('pertuk.docs.show', ['locale' => $locale]);
+        return redirect()->to(PertukUrl::doc('index', locale: $locale));
     }
 
     /**
@@ -68,7 +69,6 @@ class LocaleController extends Controller
     protected function getLocaleEquivalentUrl(string $url, string $locale): string
     {
         $docsPrefix = config('pertuk.route_prefix', 'docs');
-        $versions = DocumentationService::getAvailableVersions();
 
         // Parse path from URL
         $path = parse_url($url, PHP_URL_PATH) ?? '/';
@@ -81,24 +81,11 @@ class LocaleController extends Controller
         $remainder = array_slice($segments, count($prefixSegments));
 
         if (empty($remainder)) {
-            return route('pertuk.docs.show', ['locale' => $locale]);
+            return PertukUrl::doc('index', locale: $locale);
         }
 
-        // Check structure: [version, locale, slug...] or [locale, slug...]
-        $first = $remainder[0];
+        $resolved = PathResolver::resolve(implode('/', $remainder));
 
-        if (in_array($first, $versions, true)) {
-            // Versioned URL: /docs/{version}/{locale}/{slug}
-            // Replace the second segment (locale)
-            if (isset($remainder[1])) {
-                $remainder[1] = $locale;
-            }
-        } else {
-            // Unversioned URL: /docs/{locale}/{slug}
-            // Replace first segment
-            $remainder[0] = $locale;
-        }
-
-        return url($docsPrefix.'/'.implode('/', $remainder));
+        return PertukUrl::doc($resolved['slug'], locale: $locale, version: $resolved['version']);
     }
 }

@@ -9,7 +9,7 @@ it('renders ascii art with custom renderer', function () {
 
     $this->createTestMarkdownFile('ascii-test.md', $content);
 
-    $response = $this->get('/docs/en/ascii-test');
+    $response = $this->get('/docs/ascii-test');
 
     $response->assertOk();
 
@@ -28,7 +28,7 @@ it('renders json code blocks with proper language labels or classes', function (
 
     $this->createTestMarkdownFile('json-test.md', $content);
 
-    $response = $this->get('/docs/en/json-test');
+    $response = $this->get('/docs/json-test');
 
     $response->assertOk();
 
@@ -46,7 +46,7 @@ it('preserves newlines in multi-line code blocks', function () {
 
     $this->createTestMarkdownFile('newline-test.md', $content);
 
-    $response = $this->get('/docs/en/newline-test');
+    $response = $this->get('/docs/newline-test');
 
     $response->assertOk();
 

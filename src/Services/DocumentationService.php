@@ -15,6 +15,8 @@ use Symfony\Component\Finder\SplFileInfo;
 use Xoshbin\Pertuk\Services\Content\ContentProcessor;
 use Xoshbin\Pertuk\Services\Markdown\MarkdownRenderer;
 use Xoshbin\Pertuk\Services\Source\SourceDriver;
+use Xoshbin\Pertuk\Support\LocaleConfig;
+use Xoshbin\Pertuk\Support\PertukUrl;
 
 class DocumentationService
 {
@@ -113,7 +115,7 @@ class DocumentationService
     public function discoverAll(): array
     {
         $all = [];
-        $locales = config('pertuk.supported_locales', ['en']);
+        $locales = LocaleConfig::allLangs();
 
         foreach ($locales as $locale) {
             foreach ($this->list($locale) as $item) {
@@ -136,26 +138,40 @@ class DocumentationService
     {
         $root = $this->source->rootPath();
         $versionPart = $this->version ? $this->version.DIRECTORY_SEPARATOR : '';
-        $dir = $root.DIRECTORY_SEPARATOR.$versionPart.$locale;
+        $base = $root.DIRECTORY_SEPARATOR.$versionPart;
+
+        if (LocaleConfig::isRootLang($locale)) {
+            $dir = $base;
+        } else {
+            $dir = $base.$locale;
+        }
 
         if (! File::exists($dir)) {
-            // Fallback to non-versioned locale folder if versioned one doesn't exist
-            if ($this->version) {
-                $flatDir = $root.DIRECTORY_SEPARATOR.$locale;
-                if (File::exists($flatDir)) {
-                    $dir = $flatDir;
-                } else {
-                    return collect([]);
-                }
-            } else {
-                return collect([]);
-            }
+            return collect([]);
         }
 
         return collect(File::allFiles($dir))
             ->filter(fn ($file) => Str::endsWith($file->getFilename(), '.md'))
-            ->reject(function ($file) use ($dir) {
-                $relPath = Str::after($file->getPathname(), rtrim($dir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
+            ->reject(function ($file) use ($base, $locale) {
+                $path = $file->getPathname();
+
+                // If we are scanning the root locale, we must exclude files that
+                // sit inside a secondary locale directory or a version directory.
+                if (LocaleConfig::isRootLang($locale)) {
+                    foreach (LocaleConfig::secondaryCodes() as $code) {
+                        if (Str::startsWith($path, $base.$code.DIRECTORY_SEPARATOR)) {
+                            return true;
+                        }
+                    }
+
+                    foreach (LocaleConfig::versions() as $v) {
+                        if ($this->version !== $v && Str::startsWith($path, $root.DIRECTORY_SEPARATOR.$v.DIRECTORY_SEPARATOR)) {
+                            return true;
+                        }
+                    }
+                }
+
+                $relPath = Str::after($path, rtrim($base, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
 
                 // Check if filename is in exclude list
                 if (in_array($file->getFilename(), $this->excludeDirectories, true)) {
@@ -293,7 +309,7 @@ class DocumentationService
     {
         $index = [];
         // If specific locale requested, use it; otherwise use all supported
-        $locales = $locale ? [$locale] : config('pertuk.supported_locales', ['en']);
+        $locales = $locale ? [$locale] : LocaleConfig::allLangs();
 
         foreach ($locales as $loc) {
             foreach ($this->list($loc) as $item) {
@@ -342,7 +358,12 @@ class DocumentationService
     {
         $root = $this->source->rootPath();
         $versionPart = $this->version ? $this->version.DIRECTORY_SEPARATOR : '';
-        $path = $root.DIRECTORY_SEPARATOR.$versionPart.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
+
+        if (LocaleConfig::isRootLang($locale)) {
+            $path = $root.DIRECTORY_SEPARATOR.$versionPart.str_replace('/', DIRECTORY_SEPARATOR, $slug);
+        } else {
+            $path = $root.DIRECTORY_SEPARATOR.$versionPart.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
+        }
 
         if (! Str::endsWith($path, '.md')) {
             $path .= '.md';
@@ -352,47 +373,27 @@ class DocumentationService
             return $path;
         }
 
-        // Fallback to non-versioned path if versioned one doesn't exist
-        // This maintains backward compatibility for existing "flat" documentation
-        if ($this->version) {
-            $flatPath = $root.DIRECTORY_SEPARATOR.$locale.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $slug);
-            if (! Str::endsWith($flatPath, '.md')) {
-                $flatPath .= '.md';
-            }
-
-            if (File::exists($flatPath)) {
-                return $flatPath;
-            }
-        }
-
         return null;
     }
 
-    /**
-     * Convert a file path back to a slug
-     */
     public function getSlugFromPath(string $path): string
     {
         $root = rtrim($this->source->rootPath(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
         $rel = Str::after($path, $root);
-        // $rel is "v1.0/en/slug.md" or "en/slug.md"
 
         $parts = explode(DIRECTORY_SEPARATOR, $rel);
 
         // Check if first part is a version
-        $versions = self::getAvailableVersions();
-        if (count($parts) > 2 && in_array($parts[0], $versions)) {
-            // It's versioned, skip version and locale
-            return Str::beforeLast(implode('/', array_slice($parts, 2)), '.md');
+        if (! empty($parts) && in_array($parts[0], LocaleConfig::versions())) {
+            array_shift($parts);
         }
 
-        // It's likely flat or first part is locale
-        if (count($parts) > 1) {
-            // Skip locale
-            return Str::beforeLast(implode('/', array_slice($parts, 1)), '.md');
+        // Check if current first part is a secondary locale
+        if (! empty($parts) && LocaleConfig::isSecondary($parts[0])) {
+            array_shift($parts);
         }
 
-        return Str::beforeLast($rel, '.md');
+        return Str::beforeLast(implode('/', $parts), '.md');
     }
 
     protected function resolveRelativeDocLink(string $href, string $currentSlug, string $locale): string
@@ -405,31 +406,19 @@ class DocumentationService
         }
         $slug = trim($currentDir ? ($currentDir.'/'.$target) : $target, '/');
 
-        return url('/'.config('pertuk.route_prefix', 'docs').'/'.($this->version ? $this->version.'/' : '').$locale.'/'.$slug);
+        return PertukUrl::doc($slug, locale: $locale, version: $this->version);
     }
 
-    /**
-     * Build language alternate links for a given slug based on available files.
-     *
-     * @return array<int, array{locale:string, label:string, url:string, active:bool}>
-     */
     protected function buildAlternates(string $locale, string $slug): array
     {
-        // Determine base slug (already passed as simple slug)
-        $supported = (array) config('pertuk.supported_locales', ['en']);
-
-        $labels = (array) config('pertuk.locale_labels', []);
-        $prefix = (string) config('pertuk.route_prefix', 'docs');
-
         $alternates = [];
-        foreach ($supported as $loc) {
-            $loc = (string) $loc;
+        foreach (LocaleConfig::allLangs() as $loc) {
             $path = $this->resolvePath($loc, $slug);
             if ($path) {
                 $alternates[] = [
                     'locale' => $loc,
-                    'label' => (string) ($labels[$loc] ?? strtoupper($loc)),
-                    'url' => url('/'.$prefix.'/'.($this->version ? $this->version.'/' : '').$loc.'/'.$slug),
+                    'label' => LocaleConfig::label($loc),
+                    'url' => PertukUrl::doc($slug, locale: $loc, version: $this->version),
                     'active' => $loc === $locale,
                 ];
             }
@@ -438,15 +427,15 @@ class DocumentationService
         return $alternates;
     }
 
-    /**
-     * Compute the expected relative path (from rootPath()) for a given locale/slug.
-     * Mirrors resolvePath() but returns the relative form, used to ask the source
-     * driver to hydrate a single file before we read it.
-     */
     protected function expectedRelativePath(string $locale, string $slug): string
     {
         $versionPart = $this->version ? $this->version.'/' : '';
-        $rel = $versionPart.$locale.'/'.$slug;
+
+        if (LocaleConfig::isRootLang($locale)) {
+            $rel = $versionPart.$slug;
+        } else {
+            $rel = $versionPart.$locale.'/'.$slug;
+        }
 
         if (! Str::endsWith($rel, '.md')) {
             $rel .= '.md';

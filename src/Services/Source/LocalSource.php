@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Xoshbin\Pertuk\Services\Source;
 
+use Xoshbin\Pertuk\Support\LocaleConfig;
+
 class LocalSource implements SourceDriver
 {
-    use ScansVersions;
 
     public function rootPath(): string
     {
@@ -57,6 +58,6 @@ class LocalSource implements SourceDriver
 
     public function availableVersions(): array
     {
-        return $this->scanVersions($this->rootPath());
+        return LocaleConfig::versions();
     }
 }

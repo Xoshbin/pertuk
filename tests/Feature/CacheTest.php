@@ -27,7 +27,7 @@ it('caches parsed document content', function () {
     expect($time2)->toBeLessThan($time1); // Cache should be faster
 
     // Verify cache key exists
-    $path = $this->getTestDocsPath().'/en/test-cache.md';
+    $path = $this->getTestDocsPath().'/test-cache.md';
     $mtime = File::lastModified($path);
     $realPath = realpath($path) ?: $path;
     $cacheKey = 'pertuk:docs:en:'.md5($realPath.':'.$mtime);
@@ -74,7 +74,7 @@ it('respects cache TTL configuration', function () {
     $doc1 = $service->get('en', 'test-ttl');
 
     // Verify it's cached
-    $path = $this->getTestDocsPath().'/en/test-ttl.md';
+    $path = $this->getTestDocsPath().'/test-ttl.md';
     $mtime = File::lastModified($path);
     $realPath = realpath($path) ?: $path;
     $cacheKey = 'pertuk:docs:en:'.md5($realPath.':'.$mtime);
@@ -99,8 +99,8 @@ it('generates unique cache keys for different files', function () {
     $service->get('en', 'doc2');
 
     // Verify different cache keys exist
-    $path1 = $this->getTestDocsPath().'/en/doc1.md';
-    $path2 = $this->getTestDocsPath().'/en/doc2.md';
+    $path1 = $this->getTestDocsPath().'/doc1.md';
+    $path2 = $this->getTestDocsPath().'/doc2.md';
     $mtime1 = File::lastModified($path1);
     $mtime2 = File::lastModified($path2);
 
@@ -149,7 +149,7 @@ it('handles cache corruption gracefully', function () {
     $doc1 = $service->get('en', 'cache-corruption');
 
     // Manually corrupt the cache
-    $path = $this->getTestDocsPath().'/en/cache-corruption.md';
+    $path = $this->getTestDocsPath().'/cache-corruption.md';
     $mtime = File::lastModified($path);
     $realPath = realpath($path) ?: $path;
     $cacheKey = 'pertuk:docs:en:'.md5($realPath.':'.$mtime);

@@ -129,7 +129,7 @@ it('renders breadcrumbs correctly in view', function () {
     // Create a nested document
     $this->createTestMarkdownFile('user-manual.md', "---\ntitle: User Manual\n---\n\n# User Manual", 'Guides');
 
-    $response = $this->get('/docs/en/Guides/user-manual');
+    $response = $this->get('/docs/Guides/user-manual');
     $response->assertOk();
 
     // Should contain breadcrumb navigation
@@ -155,7 +155,7 @@ it('applies LTR styling for English content', function () {
     // Create English document
     $this->createTestMarkdownFile('english-doc.md', "---\ntitle: English Document\n---\n\n# English Document\n\nEnglish content here.");
 
-    $response = $this->get('/docs/en/english-doc');
+    $response = $this->get('/docs/english-doc');
     $response->assertOk();
 
     // Should contain LTR direction (or no explicit direction)
@@ -166,7 +166,7 @@ it('includes proper CSS classes for prose styling', function () {
     // Create a document
     $this->createTestMarkdownFile('prose-test.md', "---\ntitle: Prose Test\n---\n\n# Prose Test\n\nContent for prose styling.");
 
-    $response = $this->get('/docs/en/prose-test');
+    $response = $this->get('/docs/prose-test');
     $response->assertOk();
 
     // Should contain prose classes for styling
@@ -181,7 +181,7 @@ it('renders table of contents in sidebar', function () {
     $content = "---\ntitle: TOC Sidebar Test\n---\n\n# Main Title\n\n## Section A\n\nContent A.\n\n## Section B\n\nContent B.";
     $this->createTestMarkdownFile('toc-sidebar.md', $content);
 
-    $response = $this->get('/docs/en/toc-sidebar');
+    $response = $this->get('/docs/toc-sidebar');
     $response->assertOk();
 
     // Should contain TOC links

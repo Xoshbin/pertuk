@@ -272,7 +272,7 @@ class ContentProcessor
         }
         $slug = trim($currentDir ? ($currentDir.'/'.$target) : $target, '/');
 
-        return url('/'.config('pertuk.route_prefix', 'docs').'/'.($version ? $version.'/' : '').$locale.'/'.$slug);
+        return \Xoshbin\Pertuk\Support\PertukUrl::doc($slug, locale: $locale, version: $version);
     }
 
     protected function createDomDocument(string $html): DOMDocument

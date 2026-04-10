@@ -62,14 +62,13 @@ return [
     'middleware' => ['web'],
 
     // Localization settings
-    'supported_locales' => ['en', 'ckb', 'ar'],
-    'default_locale' => 'en',
-    'rtl_locales' => ['ar', 'ckb'],
-    'locale_labels' => [
-        'en' => 'English',
-        'ckb' => 'کوردی (سۆرانی)',
-        'ar' => 'العربية',
+    'locales' => [
+        'root' => ['label' => 'English',        'lang' => 'en',  'dir' => 'ltr'],
+        'ar'   => ['label' => 'العربية',         'lang' => 'ar',  'dir' => 'rtl'],
+        'ckb'  => ['label' => 'کوردی (سۆرانی)', 'lang' => 'ckb', 'dir' => 'rtl'],
     ],
+
+    'versions' => [],  // e.g. ['v1.0', 'v2.0'] — empty = no versioning
 
     // Theme settings
     // Options: 'light', 'dark', 'system'

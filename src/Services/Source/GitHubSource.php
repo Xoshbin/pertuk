@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
+use Xoshbin\Pertuk\Support\LocaleConfig;
+
 class GitHubSource implements SourceDriver
 {
-    use ScansVersions;
 
     public function __construct(
         protected GitHubClient $client,
@@ -184,6 +185,6 @@ class GitHubSource implements SourceDriver
 
     public function availableVersions(): array
     {
-        return $this->scanVersions($this->rootPath());
+        return LocaleConfig::versions();
     }
 }

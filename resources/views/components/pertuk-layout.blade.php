@@ -2,7 +2,7 @@
 
 @php
     $locale = $currentLocale ?? app()->getLocale();
-    $isRtl = in_array($locale, config('pertuk.rtl_locales', ['ar', 'ckb']));
+    $isRtl = \Xoshbin\Pertuk\Support\LocaleConfig::isRtl($locale);
     $current_version = $currentVersion; // Pass through to included header
 @endphp
 <!DOCTYPE html>

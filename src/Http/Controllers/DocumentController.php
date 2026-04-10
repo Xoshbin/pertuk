@@ -17,23 +17,12 @@ use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Xoshbin\Pertuk\Services\DocumentationService;
 use Xoshbin\Pertuk\Services\Source\SourceDriver;
+use Xoshbin\Pertuk\Support\LocaleConfig;
+use Xoshbin\Pertuk\Support\PathResolver;
+use Xoshbin\Pertuk\Support\PertukUrl;
 
 class DocumentController extends Controller
 {
-    /**
-     * Redirect root to default locale.
-     */
-    public function root(): RedirectResponse
-    {
-        $default = config('pertuk.default_locale', 'en');
-        $routeNamePrefix = config('pertuk.route_name_prefix', 'pertuk.docs.');
-
-        return redirect()->route($routeNamePrefix.'show', [
-            'locale' => $default,
-            'slug' => 'index',
-        ]);
-    }
-
     /**
      * Show a documentation page.
      */
@@ -44,17 +33,13 @@ class DocumentController extends Controller
             Session::start();
         }
 
-        $version = $request->route('version');
-        $locale = $request->route('locale');
-        $slug = $request->route('slug') ?? 'index';
-
-        $locale = is_string($locale) ? $locale : 'en';
-        $slug = is_string($slug) ? $slug : 'index';
-        $version = is_string($version) ? $version : null;
+        $resolved = PathResolver::resolve((string) $request->route('path'));
+        $locale = $resolved['locale'];
+        $version = $resolved['version'];
+        $slug = $resolved['slug'];
 
         // Validation - 404 if locale not supported
-        $supportedLocales = (array) config('pertuk.supported_locales', ['en']);
-        abort_unless(in_array($locale, $supportedLocales, true), 404);
+        abort_unless($locale && in_array($locale, LocaleConfig::allLangs(), true), 404);
 
         // Set application locale state
         App::setLocale($locale);
@@ -138,11 +123,13 @@ class DocumentController extends Controller
      */
     public function searchIndex(Request $request): JsonResponse
     {
-        $version = $request->route('version');
-        $locale = $request->route('locale');
+        $resolved = PathResolver::resolve((string) $request->route('path'));
+        $locale = $resolved['locale'];
+        $version = $resolved['version'];
 
-        $version = is_string($version) ? $version : null;
-        $locale = is_string($locale) ? $locale : config('pertuk.default_locale', 'en');
+        if (! $locale || ! in_array($locale, LocaleConfig::allLangs(), true)) {
+            abort(404, 'Documentation locale not found.');
+        }
 
         $items = DocumentationService::make($version)->buildIndex($locale);
 

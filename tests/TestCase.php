@@ -53,6 +53,21 @@ class TestCase extends Orchestra
         config()->set('pertuk.exclude', ['.DS_Store', 'README.md', 'Developers']);
         config()->set('pertuk.default_order', 1000);
 
+        // Set up the new locales configuration
+        config()->set('pertuk.locales', [
+            'root' => [
+                'label' => 'English',
+                'lang' => 'en',
+                'dir' => 'ltr',
+            ],
+            'ar' => [
+                'label' => 'Arabic',
+                'lang' => 'ar',
+                'dir' => 'rtl',
+            ],
+        ]);
+        config()->set('pertuk.versions', []);
+
         // Set up app locale for testing
         config()->set('app.locale', 'en');
         config()->set('app.fallback_locale', 'en');
@@ -78,12 +93,6 @@ class TestCase extends Orchestra
             // Use force=true to avoid race-condition mkdir errors in parallel tests
             File::makeDirectory($docsPath, 0755, true, true);
         }
-
-        // Create default locale directory
-        $defaultLocalePath = $docsPath.'/en';
-        if (! File::exists($defaultLocalePath)) {
-            File::makeDirectory($defaultLocalePath, 0755, true, true);
-        }
     }
 
     protected function cleanupTestDocsDirectory(): void
@@ -100,10 +109,14 @@ class TestCase extends Orchestra
         $docsPath = $this->getTestDocsPath();
 
         // Ensure path includes version if provided
+        $targetPath = $docsPath;
         if ($version) {
-            $targetPath = $docsPath.'/'.$version.'/'.$locale;
-        } else {
-            $targetPath = $docsPath.'/'.$locale;
+            $targetPath .= '/'.$version;
+        }
+
+        // Only add locale prefix for secondary locales
+        if ($locale !== 'en') {
+            $targetPath .= '/'.$locale;
         }
 
         // If subdirectory is provided, append it

@@ -48,15 +48,16 @@ it('warmAll downloads blobs under the configured path into cachePath and writes 
         'api.github.com/repos/acme/docs/git/trees/main*' => Http::response([
             'sha' => 'tree-1',
             'tree' => [
-                ['path' => 'docs/en/intro.md',  'type' => 'blob', 'sha' => 'sha-intro'],
-                ['path' => 'docs/en/guide.md',  'type' => 'blob', 'sha' => 'sha-guide'],
+                ['path' => 'docs/intro.md',  'type' => 'blob', 'sha' => 'sha-intro'],
+                ['path' => 'docs/guide.md',  'type' => 'blob', 'sha' => 'sha-guide'],
+                ['path' => 'docs/ar/arabic.md', 'type' => 'blob', 'sha' => 'sha-arabic'],
                 ['path' => 'README.md',         'type' => 'blob', 'sha' => 'sha-readme'], // outside docs/, must be skipped
-                ['path' => 'docs/en',           'type' => 'tree', 'sha' => 'sha-dir'],
             ],
             'truncated' => false,
         ], 200),
-        'raw.githubusercontent.com/acme/docs/main/docs/en/intro.md' => Http::response('# Intro', 200),
-        'raw.githubusercontent.com/acme/docs/main/docs/en/guide.md' => Http::response('# Guide', 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/intro.md' => Http::response('# Intro', 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/guide.md' => Http::response('# Guide', 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/ar/arabic.md' => Http::response('# Arabic', 200),
     ]);
 
     $source = new GitHubSource(
@@ -69,21 +70,22 @@ it('warmAll downloads blobs under the configured path into cachePath and writes 
 
     $source->warmAll();
 
-    expect(File::get($this->ghCachePath.'/en/intro.md'))->toBe('# Intro');
-    expect(File::get($this->ghCachePath.'/en/guide.md'))->toBe('# Guide');
+    expect(File::get($this->ghCachePath.'/intro.md'))->toBe('# Intro');
+    expect(File::get($this->ghCachePath.'/guide.md'))->toBe('# Guide');
+    expect(File::get($this->ghCachePath.'/ar/arabic.md'))->toBe('# Arabic');
     expect(File::exists($this->ghCachePath.'/README.md'))->toBeFalse();
 
     $manifest = json_decode(File::get($this->ghCachePath.'/.manifest.json'), true);
     expect($manifest['tree_sha'])->toBe('tree-1');
-    expect($manifest['files']['en/intro.md'])->toBe('sha-intro');
-    expect($manifest['files']['en/guide.md'])->toBe('sha-guide');
+    expect($manifest['files']['intro.md'])->toBe('sha-intro');
+    expect($manifest['files']['guide.md'])->toBe('sha-guide');
 });
 
 it('warmAll downloads zero blobs when re-run with the same tree sha and unchanged blob shas', function () {
     $treePayload = [
         'sha' => 'tree-1',
         'tree' => [
-            ['path' => 'docs/en/intro.md', 'type' => 'blob', 'sha' => 'sha-intro'],
+            ['path' => 'docs/intro.md', 'type' => 'blob', 'sha' => 'sha-intro'],
         ],
         'truncated' => false,
     ];
@@ -120,16 +122,16 @@ it('warmAll re-downloads only blobs whose sha changed', function () {
     $first = [
         'sha' => 'tree-1',
         'tree' => [
-            ['path' => 'docs/en/intro.md', 'type' => 'blob', 'sha' => 'sha-intro-1'],
-            ['path' => 'docs/en/guide.md', 'type' => 'blob', 'sha' => 'sha-guide-1'],
+            ['path' => 'docs/intro.md', 'type' => 'blob', 'sha' => 'sha-intro-1'],
+            ['path' => 'docs/guide.md', 'type' => 'blob', 'sha' => 'sha-guide-1'],
         ],
         'truncated' => false,
     ];
 
     Http::fake([
         'api.github.com/*' => Http::response($first, 200),
-        'raw.githubusercontent.com/acme/docs/main/docs/en/intro.md' => Http::response('# Intro v1', 200),
-        'raw.githubusercontent.com/acme/docs/main/docs/en/guide.md' => Http::response('# Guide v1', 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/intro.md' => Http::response('# Intro v1', 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/guide.md' => Http::response('# Guide v1', 200),
     ]);
 
     $source = new GitHubSource(
@@ -145,8 +147,8 @@ it('warmAll re-downloads only blobs whose sha changed', function () {
     $second = [
         'sha' => 'tree-2',
         'tree' => [
-            ['path' => 'docs/en/intro.md', 'type' => 'blob', 'sha' => 'sha-intro-1'], // unchanged
-            ['path' => 'docs/en/guide.md', 'type' => 'blob', 'sha' => 'sha-guide-2'], // changed
+            ['path' => 'docs/intro.md', 'type' => 'blob', 'sha' => 'sha-intro-1'], // unchanged
+            ['path' => 'docs/guide.md', 'type' => 'blob', 'sha' => 'sha-guide-2'], // changed
         ],
         'truncated' => false,
     ];
@@ -154,21 +156,20 @@ it('warmAll re-downloads only blobs whose sha changed', function () {
     Http::swap(new HttpFactory); // Reset all stubs and recorded history before the second sync.
     Http::fake([
         'api.github.com/*' => Http::response($second, 200),
-        'raw.githubusercontent.com/acme/docs/main/docs/en/guide.md' => Http::response('# Guide v2', 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/guide.md' => Http::response('# Guide v2', 200),
     ]);
 
     $source->warmAll();
 
-    expect(File::get($this->ghCachePath.'/en/guide.md'))->toBe('# Guide v2');
+    expect(File::get($this->ghCachePath.'/guide.md'))->toBe('# Guide v2');
 
     Http::assertNotSent(function ($request) {
-        return str_contains($request->url(), 'docs/en/intro.md');
+        return str_contains($request->url(), 'docs/intro.md');
     });
 });
 
 it('ensureFile is a no-op when the file already exists locally', function () {
-    File::ensureDirectoryExists($this->ghCachePath.'/en');
-    File::put($this->ghCachePath.'/en/intro.md', '# Cached');
+    File::put($this->ghCachePath.'/intro.md', '# Cached');
 
     Http::fake();
 
@@ -180,15 +181,15 @@ it('ensureFile is a no-op when the file already exists locally', function () {
         cachePath: $this->ghCachePath,
     );
 
-    $source->ensureFile('en/intro.md');
+    $source->ensureFile('intro.md');
 
     Http::assertNothingSent();
-    expect(File::get($this->ghCachePath.'/en/intro.md'))->toBe('# Cached');
+    expect(File::get($this->ghCachePath.'/intro.md'))->toBe('# Cached');
 });
 
 it('ensureFile downloads a single blob when the file is missing', function () {
     Http::fake([
-        'raw.githubusercontent.com/acme/docs/main/docs/en/intro.md' => Http::response('# Fresh', 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/intro.md' => Http::response('# Fresh', 200),
     ]);
 
     $source = new GitHubSource(
@@ -199,9 +200,9 @@ it('ensureFile downloads a single blob when the file is missing', function () {
         cachePath: $this->ghCachePath,
     );
 
-    $source->ensureFile('en/intro.md');
+    $source->ensureFile('intro.md');
 
-    expect(File::get($this->ghCachePath.'/en/intro.md'))->toBe('# Fresh');
+    expect(File::get($this->ghCachePath.'/intro.md'))->toBe('# Fresh');
 });
 
 it('ensureAsset returns the absolute path for an asset already on disk', function () {
@@ -295,15 +296,8 @@ it('ensureFile rejects path traversal without calling HTTP', function () {
     Http::assertNothingSent();
 });
 
-it('availableVersions scans the cache path for version folders containing a locale', function () {
-    config()->set('pertuk.supported_locales', ['en']);
-    config()->set('pertuk.exclude_versions', []);
-
-    File::ensureDirectoryExists($this->ghCachePath.'/v1.0/en');
-    File::put($this->ghCachePath.'/v1.0/en/x.md', '# v1');
-
-    File::ensureDirectoryExists($this->ghCachePath.'/v2.0/en');
-    File::put($this->ghCachePath.'/v2.0/en/x.md', '# v2');
+it('returns versions from the configuration', function () {
+    config()->set('pertuk.versions', ['v2.1', 'v2.0']);
 
     $source = new GitHubSource(
         client: new GitHubClient('acme/docs', 'main', token: null),
@@ -313,5 +307,5 @@ it('availableVersions scans the cache path for version folders containing a loca
         cachePath: $this->ghCachePath,
     );
 
-    expect($source->availableVersions())->toBe(['v2.0', 'v1.0']);
+    expect($source->availableVersions())->toBe(['v2.1', 'v2.0']);
 });

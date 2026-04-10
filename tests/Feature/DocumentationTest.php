@@ -6,20 +6,16 @@ it('renders the docs index with at least one document', function () {
     // Create a test document
     $this->createTestMarkdownFile('payments.md', "---\ntitle: Payments\norder: 1\n---\n\n# Payments\n\nThis is a guide about payments.");
 
-    $response = $this->get('/docs/en/index');
+    $response = $this->get('/docs');
 
     $response->assertOk();
     // Expect the Payments guide to be displayed
     $response->assertSee('Payments', false);
 });
 
-it('discovers available versions correctly', function () {
-    // Set up supported locales
-    config(['pertuk.supported_locales' => ['en', 'ckb']]);
-
-    // Create versioned directories
-    $this->createTestMarkdownFile('test.md', '# Test', '', 'en', 'v1.0');
-    $this->createTestMarkdownFile('test.md', '# Test', '', 'ckb', 'v2.0');
+it('gets available versions', function () {
+    // Set up versions in config
+    config(['pertuk.versions' => ['v2.0', 'v1.0']]);
 
     $versions = DocumentationService::getAvailableVersions();
 
@@ -35,7 +31,7 @@ it('renders a doc page with TOC and breadcrumbs', function () {
 
     $this->createTestMarkdownFile('receipt-payment-vouchers.md', $content, 'User Guide');
 
-    $response = $this->get('/docs/en/User Guide/receipt-payment-vouchers');
+    $response = $this->get('/docs/User Guide/receipt-payment-vouchers');
 
     $response->assertOk();
     $response->assertSee('<h1', false);
@@ -56,7 +52,7 @@ it('returns 304 Not Modified when If-Modified-Since matches', function () {
     // Create a test document
     $this->createTestMarkdownFile('receipt-payment-vouchers.md', "---\ntitle: Receipt and Payment Vouchers\n---\n\n# Receipt and Payment Vouchers\n\nContent here.", 'User Guide');
 
-    $first = $this->get('/docs/en/User Guide/receipt-payment-vouchers');
+    $first = $this->get('/docs/User Guide/receipt-payment-vouchers');
     $first->assertOk();
 
     $lastModified = $first->headers->get('Last-Modified');
@@ -64,7 +60,7 @@ it('returns 304 Not Modified when If-Modified-Since matches', function () {
 
     $second = $this->withHeaders([
         'If-Modified-Since' => $lastModified,
-    ])->get('/docs/en/User Guide/receipt-payment-vouchers');
+    ])->get('/docs/User Guide/receipt-payment-vouchers');
 
     $second->assertStatus(304);
 });
@@ -73,7 +69,7 @@ it('returns 304 Not Modified when If-None-Match (ETag) matches', function () {
     // Create a test document
     $this->createTestMarkdownFile('receipt-payment-vouchers.md', "---\ntitle: Receipt and Payment Vouchers\n---\n\n# Receipt and Payment Vouchers\n\nContent here.", 'User Guide');
 
-    $first = $this->get('/docs/en/User Guide/receipt-payment-vouchers');
+    $first = $this->get('/docs/User Guide/receipt-payment-vouchers');
     $first->assertOk();
 
     $etag = $first->headers->get('ETag');
@@ -81,7 +77,7 @@ it('returns 304 Not Modified when If-None-Match (ETag) matches', function () {
 
     $second = $this->withHeaders([
         'If-None-Match' => $etag,
-    ])->get('/docs/en/User Guide/receipt-payment-vouchers');
+    ])->get('/docs/User Guide/receipt-payment-vouchers');
 
     $second->assertStatus(304);
 });
@@ -90,7 +86,7 @@ it('shows documentation search index', function () {
     // Create a test document for the search index
     $this->createTestMarkdownFile('test-doc.md', "---\ntitle: Test Document\n---\n\n# Test Document\n\nThis is a test document for search.");
 
-    $response = $this->get('/docs/en/index.json');
+    $response = $this->get('/docs/search.json');
 
     $response->assertStatus(200);
     $response->assertHeader('Content-Type', 'application/json');
@@ -102,11 +98,11 @@ it('shows documentation search index', function () {
 });
 
 it('shows versioned documentation search index', function () {
-    // Create a test document in a versioned directory
+    config(['pertuk.versions' => ['v1']]);
     $this->createTestMarkdownFile('test-v1.md', "# V1 Document\n\n## Subheading\n\nContent", '', 'en', 'v1');
 
     // Attempt to access versioned search index via route
-    $response = $this->get('/docs/v1/en/index.json');
+    $response = $this->get('/docs/v1/search.json');
 
     $response->assertStatus(200);
     $response->assertJsonFragment(['slug' => 'test-v1']);
@@ -117,26 +113,26 @@ it('renders search input with dynamic data attributes', function () {
     $this->createTestMarkdownFile('welcome.md', '# Welcome');
 
     // Get a page with the header
-    $response = $this->get('/docs/en/welcome');
+    $response = $this->get('/docs/welcome');
     $response->assertOk();
 
-    $indexUrl = route('pertuk.docs.search.json', ['locale' => 'en']);
-    $baseUrl = url('/docs/en');
+    $indexUrl = url('/docs/search.json');
+    $baseUrl = \Xoshbin\Pertuk\Support\PertukUrl::doc('index', locale: 'en');
 
     $response->assertSee('data-index-url="'.$indexUrl.'"', false);
     $response->assertSee('data-base-url="'.$baseUrl.'"', false);
 });
 
 it('renders versioned search input with dynamic data attributes', function () {
-    // Set up versioned test doc
+    config(['pertuk.versions' => ['v10.0']]);
     $this->createTestMarkdownFile('v10-welcome.md', '# V10 Welcome', '', 'en', 'v10.0');
 
     // Get a versioned page
-    $response = $this->get('/docs/v10.0/en/v10-welcome');
+    $response = $this->get('/docs/v10.0/v10-welcome');
     $response->assertOk();
 
-    $indexUrl = route('pertuk.docs.version.search.json', ['version' => 'v10.0', 'locale' => 'en']);
-    $baseUrl = url('/docs/v10.0/en');
+    $indexUrl = url('/docs/v10.0/search.json');
+    $baseUrl = \Xoshbin\Pertuk\Support\PertukUrl::doc('index', locale: 'en', version: 'v10.0');
 
     $response->assertSee('data-index-url="'.$indexUrl.'"', false);
     $response->assertSee('data-base-url="'.$baseUrl.'"', false);

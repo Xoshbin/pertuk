@@ -1,5 +1,5 @@
 @php
-    $isRtl = in_array(app()->getLocale(), config('pertuk.rtl_locales', ['ar', 'ckb']));
+    $isRtl = \Xoshbin\Pertuk\Support\LocaleConfig::isRtl(app()->getLocale());
 @endphp
 <header
     class="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
@@ -7,7 +7,7 @@
         <div class="flex h-16 items-center justify-between">
             <!-- Logo -->
             <div class="flex items-center gap-8">
-                <a href="{{ route('pertuk.docs.show', ['locale' => app()->getLocale()]) }}"
+                <a href="{{ \Xoshbin\Pertuk\Support\PertukUrl::doc('index', locale: app()->getLocale()) }}"
                     class="flex items-center gap-3 text-gray-900 dark:text-white transition-colors hover:text-orange-600 dark:hover:text-orange-400">
                     <div
                         class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600 text-white font-bold text-sm shadow-sm">
@@ -29,12 +29,18 @@
                     @php
                         $currentLocale = app()->getLocale();
                         $currentVersion = $current_version ?? null;
-                        
-                        $searchIndexUrl = $currentVersion 
-                            ? route('pertuk.docs.version.search.json', ['version' => $currentVersion, 'locale' => $currentLocale])
-                            : route('pertuk.docs.search.json', ['locale' => $currentLocale]);
-                            
-                        $searchBaseUrl = url('/' . config('pertuk.route_prefix', 'docs') . ($currentVersion ? '/' . $currentVersion : '') . '/' . $currentLocale);
+
+                        $searchPath = [];
+                        if ($currentVersion) {
+                            $searchPath[] = $currentVersion;
+                        }
+                        if (! \Xoshbin\Pertuk\Support\LocaleConfig::isRootLang($currentLocale)) {
+                            $searchPath[] = $currentLocale;
+                        }
+                        $searchPath[] = 'search.json';
+
+                        $searchIndexUrl = url('/' . config('pertuk.route_prefix', 'docs') . '/' . implode('/', $searchPath));
+                        $searchBaseUrl = \Xoshbin\Pertuk\Support\PertukUrl::doc('index', locale: $currentLocale, version: $currentVersion);
                     @endphp
                     <input id="docs-search-input" type="search" placeholder="{{ __('Search documentation...') }}"
                         aria-label="{{ __('Search documentation') }}"
@@ -82,7 +88,7 @@
                                     return str_starts_with($item['slug'], $context . '/');
                                 });
                                 $linkUrl = $firstDoc 
-                                    ? route('pertuk.docs.show', ['locale' => app()->getLocale(), 'slug' => $firstDoc['slug']])
+                                    ? \Xoshbin\Pertuk\Support\PertukUrl::doc($firstDoc['slug'], locale: app()->getLocale(), version: $current_version ?? null)
                                     : '#';
                              @endphp
                              <a href="{{ $linkUrl }}" 
@@ -99,12 +105,11 @@
                     <select id="global-lang-select"
                         class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800">
                         @php
-                            $supported = config('pertuk.supported_locales', ['en']);
-                            $labels = config('pertuk.locale_labels', []);
+                            $supported = \Xoshbin\Pertuk\Support\LocaleConfig::allLangs();
                         @endphp
                         @foreach ($supported as $loc)
                             <option value="{{ $loc }}" {{ app()->getLocale() === $loc ? 'selected' : '' }}>
-                                {{ $labels[$loc] ?? strtoupper($loc) }}
+                                {{ \Xoshbin\Pertuk\Support\LocaleConfig::label($loc) }}
                             </option>
                         @endforeach
                     </select>
@@ -123,7 +128,7 @@
                         <select onchange="window.location.href = this.value"
                             class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800">
                             @foreach ($versions as $ver)
-                                <option value="{{ route('pertuk.docs.version.show', ['version' => $ver, 'locale' => $currentLocale, 'slug' => $currentSlug]) }}"
+                                <option value="{{ \Xoshbin\Pertuk\Support\PertukUrl::doc($currentSlug, locale: $currentLocale, version: $ver) }}"
                                     {{ $currentVersion === $ver ? 'selected' : '' }}>
                                     {{ $ver }}
                                 </option>

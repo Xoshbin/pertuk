@@ -7,21 +7,24 @@ it('renders documentation from a specific version', function () {
     $this->createTestMarkdownFile('test.md', "# Version 1.0\nContent for v1.0", '', 'en', 'v1.0');
     $this->createTestMarkdownFile('test.md', "# Version 0.9\nContent for v0.9", '', 'en', 'v0.9');
 
+    config(['pertuk.versions' => ['v1.0', 'v0.9']]);
+
     // Test v1.0
-    $response = $this->get('/docs/v1.0/en/test');
+    $response = $this->get('/docs/v1.0/test');
     $response->assertOk();
     $response->assertSee('Version 1.0');
 
     // Test v0.9
-    $response = $this->get('/docs/v0.9/en/test');
+    $response = $this->get('/docs/v0.9/test');
     $response->assertOk();
     $response->assertSee('Version 0.9');
 });
 
 it('falls back to default version if no version is provided in URL', function () {
     $this->createTestMarkdownFile('test.md', "# Version 1.0\nContent for v1.0", '', 'en', 'v1.0');
+    config(['pertuk.versions' => ['v1.0']]);
 
-    $response = $this->get('/docs/en/test');
+    $response = $this->get('/docs/test');
     $response->assertOk();
     $response->assertSee('Version 1.0');
 });
@@ -29,23 +32,23 @@ it('falls back to default version if no version is provided in URL', function ()
 it('handles version switching in the UI', function () {
     $this->createTestMarkdownFile('test.md', '# Version 1.0', '', 'en', 'v1.0');
     $this->createTestMarkdownFile('test.md', '# Version 0.9', '', 'en', 'v0.9');
+    config(['pertuk.versions' => ['v1.0', 'v0.9']]);
 
-    $response = $this->get('/docs/v1.0/en/test');
+    $response = $this->get('/docs/v1.0/test');
     $response->assertOk();
 
     // Check if version picker has both versions and the v0.9 option points to the correct URL
     $response->assertSee('v1.0');
     $response->assertSee('v0.9');
-    $response->assertSee('docs/v0.9/en/test');
+    $response->assertSee('docs/v0.9/test');
 });
 
 it('preserves version when switching language', function () {
-    config(['pertuk.supported_locales' => ['en', 'ar']]);
-
     $this->createTestMarkdownFile('test.md', '# Version 1.0 EN', '', 'en', 'v1.0');
     $this->createTestMarkdownFile('test.md', '# Version 1.0 AR', '', 'ar', 'v1.0');
+    config(['pertuk.versions' => ['v1.0']]);
 
-    $url = url('/docs/v1.0/en/test');
+    $url = url('/docs/v1.0/test');
     $response = $this->get($url);
     $response->assertOk();
 
@@ -62,14 +65,15 @@ it('discovers available versions from directory structure', function () {
     // Create directories for multiple versions
     $this->createTestMarkdownFile('test.md', '# v2.0', '', 'en', 'v2.0');
     $this->createTestMarkdownFile('test.md', '# v1.0', '', 'en', 'v1.0');
+    config(['pertuk.versions' => ['v2.0', 'v1.0']]);
 
     $versions = DocumentationService::getAvailableVersions();
 
     expect($versions)->toBe(['v2.0', 'v1.0']);
 });
 
-it('excludes versions based on configuration', function () {
-    config(['pertuk.exclude_versions' => ['v0.8-alpha', 'archived']]);
+it('filters out non-version directories', function () {
+    config(['pertuk.versions' => ['v1.0']]);
 
     $this->createTestMarkdownFile('test.md', '# v1.0', '', 'en', 'v1.0');
     $this->createTestMarkdownFile('test.md', '# v0.8-alpha', '', 'en', 'v0.8-alpha');
@@ -79,7 +83,6 @@ it('excludes versions based on configuration', function () {
 
     expect($versions)->toContain('v1.0');
     expect($versions)->not->toContain('v0.8-alpha');
-    expect($versions)->not->toContain('archived');
 });
 
 it('passes resolved version to view for generic routes', function () {
@@ -87,9 +90,10 @@ it('passes resolved version to view for generic routes', function () {
     $this->createTestMarkdownFile('test.md', '# v2.0', '', 'en', 'v2.0');
     // Create older version to ensure we have multiple
     $this->createTestMarkdownFile('test.md', '# v1.0', '', 'en', 'v1.0');
+    config(['pertuk.versions' => ['v2.0', 'v1.0']]);
 
     // Visit generic route which should resolve to v2.0
-    $response = $this->get('/docs/en/test');
+    $response = $this->get('/docs/test');
 
     $response->assertOk();
     $response->assertViewHas('current_version', 'v2.0');
@@ -103,9 +107,10 @@ it('passes resolved version to view for generic routes even in fallback', functi
 
     // We also need another version to verify we are picking the latest
     $this->createTestMarkdownFile('other.md', '# v1.0', '', 'en', 'v1.0');
+    config(['pertuk.versions' => ['v2.0', 'v1.0']]);
 
     // Visit generic route which defaults to index
-    $response = $this->get('/docs/en');
+    $response = $this->get('/docs');
 
     $response->assertOk();
     // This view is returned in the fallback block
@@ -116,10 +121,10 @@ it('passes resolved version to view for generic routes even in fallback', functi
 
 it('marks the correct version as selected in the UI', function () {
     $this->createTestMarkdownFile('test.md', '# v1.0', '', 'en', 'v1.0');
-    $this->createTestMarkdownFile('test.md', '# v2.0', '', 'en', 'v2.0'); // Latest
+    $this->createTestMarkdownFile('json-test.md', "```json\n{\n  \"key\": \"value\"\n}\n```", '', 'en', 'v2.0'); // Latest
 
     // Visit v1.0
-    $response = $this->get('/docs/v1.0/en/test');
+    $response = $this->get('/docs/v1.0/test');
 
     $response->assertOk();
 

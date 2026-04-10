@@ -33,8 +33,9 @@
     });
 
     $locale = app()->getLocale();
-    $isRtl = in_array($locale, config('pertuk.rtl_locales', ['ar', 'ckb']));
+    $isRtl = \Xoshbin\Pertuk\Support\LocaleConfig::isRtl($locale);
     $routePrefix = config('pertuk.route_prefix', 'docs');
+    $currentVersion = $current_version ?? null;
 @endphp
 
 <nav class="space-y-6" x-data="{ search: '' }">
@@ -76,7 +77,7 @@
                     @endphp
 
                     <li x-show="!search || '{{ strtolower($displayTitle) }}'.includes(search.toLowerCase())">
-                        <a href="{{ url('/' . $routePrefix . '/' . $locale . '/' . $item['slug']) }}"
+                        <a href="{{ \Xoshbin\Pertuk\Support\PertukUrl::doc($item['slug'], locale: $locale, version: $currentVersion) }}"
                             class="group flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 border-l-2 {{ $isActive ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200' }}"
                             @if ($isActive) aria-current="page" @endif>
                             

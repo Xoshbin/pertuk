@@ -3,7 +3,13 @@
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Xoshbin\Pertuk\Services\DocumentationService;
 
-it('detects document locale from filename suffix', function () {
+it('detects document locale from directory', function () {
+    config(['pertuk.locales' => [
+        'root' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
+        'ar' => ['label' => 'Arabic', 'lang' => 'ar', 'dir' => 'rtl'],
+        'ckb' => ['label' => 'Kurdish', 'lang' => 'ckb', 'dir' => 'rtl'],
+    ]]);
+
     // Create documents in different languages
     $this->createTestMarkdownFile('guide.md', "---\ntitle: English Guide\n---\n\n# English Guide");
     $this->createTestMarkdownFile('guide.md', "---\ntitle: Arabic Guide\n---\n\n# Arabic Guide", '', 'ar');
@@ -11,7 +17,7 @@ it('detects document locale from filename suffix', function () {
 
     $service = DocumentationService::make();
 
-    // Test English (default)
+    // Test English (root)
     $enDoc = $service->get('en', 'guide');
     expect($enDoc['current_locale'])->toBe('en');
     expect($enDoc['title'])->toBe('English Guide');
@@ -74,30 +80,23 @@ it('builds language alternates for documents', function () {
     expect($activeAlternate['locale'])->toBe('ar');
 });
 
-it('works with custom locale suffixes beyond en/ar/ckb', function () {
-    // Create documents with custom locale suffixes
-    $this->createTestMarkdownFile('custom.md', "---\ntitle: Custom (Default)\n---\n\n# Custom");
-    $this->createTestMarkdownFile('custom.fr.md', "---\ntitle: Custom (French)\n---\n\n# Custom");
-    $this->createTestMarkdownFile('custom.de.md', "---\ntitle: Custom (German)\n---\n\n# Custom");
+it('works with custom locales', function () {
+    config(['pertuk.locales' => [
+        'root' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
+        'fr' => ['label' => 'French', 'lang' => 'fr', 'dir' => 'ltr'],
+        'de' => ['label' => 'German', 'lang' => 'de', 'dir' => 'ltr'],
+    ]]);
+
+    $this->createTestMarkdownFile('custom.md', "---\ntitle: Custom (English)\n---\n\n# Custom");
+    $this->createTestMarkdownFile('custom.md', "---\ntitle: Custom (French)\n---\n\n# Custom", '', 'fr');
+    $this->createTestMarkdownFile('custom.md', "---\ntitle: Custom (German)\n---\n\n# Custom", '', 'de');
 
     $service = DocumentationService::make();
-
-    // The service should handle these gracefully, treating them as English by default
-    // since they don't match the hardcoded ar/ckb patterns
-    // In strict mode, if we request a locale that doesn't exist, it should fail or falback?
-    // Actually per strict mode, we probably don't duplicate files with extensions.
-    // We expect folders. So this test case "custom locale suffixes" might be invalid now.
-    // Let's adapt it to test strict folders.
-    $this->createTestMarkdownFile('custom.md', "---\ntitle: Custom (French)\n---\n\n# Custom", '', 'fr');
-
-    // BUT, if 'fr' is not in supported_locales config, what happens?
-    config(['pertuk.supported_locales' => ['en', 'ar', 'ckb', 'fr', 'de']]);
 
     $frDoc = $service->get('fr', 'custom');
     expect($frDoc['current_locale'])->toBe('fr');
     expect($frDoc['title'])->toBe('Custom (French)');
 
-    $this->createTestMarkdownFile('custom.md', "---\ntitle: Custom (German)\n---\n\n# Custom", '', 'de');
     $deDoc = $service->get('de', 'custom');
     expect($deDoc['current_locale'])->toBe('de');
     expect($deDoc['title'])->toBe('Custom (German)');
@@ -205,6 +204,6 @@ it('generates correct URLs for language alternates', function () {
     $enAlternate = collect($alternates)->firstWhere('locale', 'en');
     $arAlternate = collect($alternates)->firstWhere('locale', 'ar');
 
-    expect($enAlternate['url'])->toContain('/docs/en/url-test');
-    expect($arAlternate['url'])->toContain('/docs/ar/url-test');
+    expect($enAlternate['url'])->toBe(url('/docs/url-test'));
+    expect($arAlternate['url'])->toBe(url('/docs/ar/url-test'));
 });

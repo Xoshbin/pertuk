@@ -6,10 +6,14 @@ namespace Xoshbin\Pertuk\Services\Markdown;
 
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
+use League\CommonMark\Extension\CommonMark\Node\Block\IndentedCode;
 use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use League\CommonMark\MarkdownConverter;
-use Spatie\CommonMarkShikiHighlighter\HighlightCodeExtension;
+use Spatie\CommonMarkShikiHighlighter\Renderers\IndentedCodeRenderer;
+use Spatie\CommonMarkShikiHighlighter\ShikiHighlighter;
+use Spatie\ShikiPhp\Shiki;
 use Xoshbin\Pertuk\Extensions\Admonition\AdmonitionExtension;
 use Xoshbin\Pertuk\Extensions\Ascii\AsciiExtension;
 use Xoshbin\Pertuk\Extensions\Component\ComponentExtension;
@@ -25,9 +29,15 @@ class MarkdownRenderer
         $env->addExtension(new CommonMarkCoreExtension);
         $env->addExtension(new GithubFlavoredMarkdownExtension);
 
-        // Register Shiki for syntax highlighting
+        // Register Shiki for syntax highlighting.
+        // Using a custom renderer (ShikiFencedCodeRenderer) instead of the
+        // upstream HighlightCodeExtension so that the fallback — used when
+        // Node.js / the shiki npm package are unavailable — always wraps code
+        // in a <pre> element and preserves whitespace correctly.
         // TODO: Make theme configurable
-        $env->addExtension(new HighlightCodeExtension('github-dark'));
+        $shikiHighlighter = new ShikiHighlighter(new Shiki('github-dark'));
+        $env->addRenderer(FencedCode::class, new ShikiFencedCodeRenderer($shikiHighlighter), 10);
+        $env->addRenderer(IndentedCode::class, new IndentedCodeRenderer($shikiHighlighter), 10);
 
         // Register HeadingPermalinkExtension so its schema is available before
         // merging config. This prevents Nette/League config validation errors

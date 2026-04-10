@@ -383,13 +383,13 @@ class DocumentationService
 
         $parts = explode(DIRECTORY_SEPARATOR, $rel);
 
-        // Check if first part is a version
-        if (! empty($parts) && in_array($parts[0], LocaleConfig::versions())) {
+        // Check if first part is a version (explode always yields ≥1 element)
+        if (in_array($parts[0], LocaleConfig::versions())) {
             array_shift($parts);
         }
 
-        // Check if current first part is a secondary locale
-        if (! empty($parts) && LocaleConfig::isSecondary($parts[0])) {
+        // Check if current first part is a secondary locale (array may be empty after the shift above)
+        if ($parts !== [] && LocaleConfig::isSecondary($parts[0])) {
             array_shift($parts);
         }
 

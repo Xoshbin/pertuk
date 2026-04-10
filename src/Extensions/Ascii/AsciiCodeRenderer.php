@@ -16,7 +16,7 @@ final class AsciiCodeRenderer implements NodeRendererInterface
     /**
      * @throws InvalidArgumentException
      */
-    public function render(Node $node, ChildNodeRendererInterface $childRenderer): \Stringable|string|null
+    public function render(Node $node, ChildNodeRendererInterface $childRenderer): \Stringable|null
     {
         if (! $node instanceof FencedCode) {
             throw new InvalidArgumentException('Incompatible node type: '.get_class($node));

@@ -8,7 +8,7 @@ return [
 
     // Source driver selection. 'local' reads from the filesystem; 'github'
     // syncs a GitHub repo subdirectory into storage and reads from there.
-    'source' => env('PERTUK_SOURCE', 'local'),
+    'source' => env('PERTUK_SOURCE', 'local'), // @phpstan-ignore-line
 
     // Per-driver configuration.
     // Note: sources.github.* (PERTUK_DOCS_*) controls WHERE docs are fetched from.
@@ -18,13 +18,13 @@ return [
             // When null, falls back to the legacy top-level 'root' key above.
             // Set this explicitly (or via PERTUK_DOCS_LOCAL_ROOT env var) to
             // override where LocalSource reads markdown from.
-            'root' => env('PERTUK_DOCS_LOCAL_ROOT'),
+            'root' => env('PERTUK_DOCS_LOCAL_ROOT'), // @phpstan-ignore-line
         ],
         'github' => [
-            'repo' => env('PERTUK_DOCS_REPO'),        // e.g. 'Xoshbin/asyar-launcher'
-            'branch' => env('PERTUK_DOCS_BRANCH', 'main'),
-            'path' => env('PERTUK_DOCS_PATH', 'docs'),
-            'token' => env('PERTUK_DOCS_TOKEN'),        // optional PAT for private repos / higher rate limit
+            'repo' => env('PERTUK_DOCS_REPO'),        // @phpstan-ignore-line e.g. 'Xoshbin/asyar-launcher'
+            'branch' => env('PERTUK_DOCS_BRANCH', 'main'), // @phpstan-ignore-line
+            'path' => env('PERTUK_DOCS_PATH', 'docs'), // @phpstan-ignore-line
+            'token' => env('PERTUK_DOCS_TOKEN'),        // @phpstan-ignore-line optional PAT for private repos / higher rate limit
             'cache_path' => storage_path('app/pertuk/github'),
         ],
     ],
@@ -83,7 +83,7 @@ return [
     'assets_path' => 'assets',
 
     // External Links
-    'github_url' => env('PERTUK_GITHUB_URL', 'https://github.com/Xoshbin/kezi'),
-    'discord_url' => env('PERTUK_DISCORD_URL', 'https://discord.gg/your-discord'),
+    'github_url' => env('PERTUK_GITHUB_URL', 'https://github.com/Xoshbin/kezi'), // @phpstan-ignore-line
+    'discord_url' => env('PERTUK_DISCORD_URL', 'https://discord.gg/your-discord'), // @phpstan-ignore-line
 
 ];

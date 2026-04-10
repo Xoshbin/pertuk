@@ -92,7 +92,7 @@ class DocumentController extends Controller
 
             return [
                 'title' => str_replace('-', ' ', ucfirst($groupKey)),
-                'slug'  => $first['slug'],
+                'slug' => $first['slug'],
             ];
         })->values();
 

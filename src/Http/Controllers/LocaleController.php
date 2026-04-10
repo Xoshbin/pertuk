@@ -11,7 +11,6 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
-use Xoshbin\Pertuk\Services\DocumentationService;
 use Xoshbin\Pertuk\Support\LocaleConfig;
 use Xoshbin\Pertuk\Support\PathResolver;
 use Xoshbin\Pertuk\Support\PertukUrl;

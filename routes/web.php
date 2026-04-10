@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Xoshbin\Pertuk\Http\Controllers\DocumentController;
 use Xoshbin\Pertuk\Http\Controllers\LocaleController;
-
 use Xoshbin\Pertuk\Support\LocaleConfig;
 
 // Locale switching route

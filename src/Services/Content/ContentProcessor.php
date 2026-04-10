@@ -9,6 +9,7 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 use Illuminate\Support\Str;
+use Xoshbin\Pertuk\Support\PertukUrl;
 
 class ContentProcessor
 {
@@ -272,7 +273,7 @@ class ContentProcessor
         }
         $slug = trim($currentDir ? ($currentDir.'/'.$target) : $target, '/');
 
-        return \Xoshbin\Pertuk\Support\PertukUrl::doc($slug, locale: $locale, version: $version);
+        return PertukUrl::doc($slug, locale: $locale, version: $version);
     }
 
     protected function createDomDocument(string $html): DOMDocument

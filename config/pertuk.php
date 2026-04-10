@@ -64,8 +64,8 @@ return [
     // Localization settings
     'locales' => [
         'root' => ['label' => 'English',        'lang' => 'en',  'dir' => 'ltr'],
-        'ar'   => ['label' => 'العربية',         'lang' => 'ar',  'dir' => 'rtl'],
-        'ckb'  => ['label' => 'کوردی (سۆرانی)', 'lang' => 'ckb', 'dir' => 'rtl'],
+        'ar' => ['label' => 'العربية',         'lang' => 'ar',  'dir' => 'rtl'],
+        'ckb' => ['label' => 'کوردی (سۆرانی)', 'lang' => 'ckb', 'dir' => 'rtl'],
     ],
 
     'versions' => [],  // e.g. ['v1.0', 'v2.0'] — empty = no versioning

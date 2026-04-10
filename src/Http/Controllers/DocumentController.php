@@ -19,7 +19,6 @@ use Xoshbin\Pertuk\Services\DocumentationService;
 use Xoshbin\Pertuk\Services\Source\SourceDriver;
 use Xoshbin\Pertuk\Support\LocaleConfig;
 use Xoshbin\Pertuk\Support\PathResolver;
-use Xoshbin\Pertuk\Support\PertukUrl;
 
 class DocumentController extends Controller
 {

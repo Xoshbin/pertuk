@@ -8,7 +8,6 @@ use Xoshbin\Pertuk\Support\LocaleConfig;
 
 class LocalSource implements SourceDriver
 {
-
     public function rootPath(): string
     {
         $configured = config('pertuk.sources.local.root');

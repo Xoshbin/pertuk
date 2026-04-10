@@ -15,61 +15,37 @@
         </div>
 
         <!-- Quick Start Cards -->
+        @php
+            $cardThemes = [
+                ['bg' => 'from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20', 'border' => 'border-orange-200 dark:border-orange-800', 'icon' => 'bg-orange-500', 'text' => 'text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300'],
+                ['bg' => 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20', 'border' => 'border-blue-200 dark:border-blue-800', 'icon' => 'bg-blue-500', 'text' => 'text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300'],
+                ['bg' => 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20', 'border' => 'border-green-200 dark:border-green-800', 'icon' => 'bg-green-500', 'text' => 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300'],
+            ];
+        @endphp
+        @if($featuredCards->isNotEmpty())
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-6 border border-orange-200 dark:border-orange-800">
+            @foreach($featuredCards as $index => $card)
+            @php $theme = $cardThemes[$index] ?? $cardThemes[0]; @endphp
+            <div class="bg-gradient-to-br {{ $theme['bg'] }} rounded-lg p-6 border {{ $theme['border'] }}">
                 <div class="flex items-center gap-3 mb-3">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-white">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Quick Start</h3>
-                </div>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Get up and running with {{ config('app.name') }} in minutes.</p>
-                <a href="{{ \Xoshbin\Pertuk\Support\PertukUrl::doc('getting-started', locale: app()->getLocale(), version: $current_version ?? null) }}" class="inline-flex items-center gap-2 text-orange-600 dark:text-orange-400 font-medium hover:text-orange-700 dark:hover:text-orange-300">
-                    Get started
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-white">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-lg {{ $theme['icon'] }} text-white">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">API Reference</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $card['title'] }}</h3>
                 </div>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Complete API documentation and examples.</p>
-                <a href="{{ \Xoshbin\Pertuk\Support\PertukUrl::doc('api', locale: app()->getLocale(), version: $current_version ?? null) }}" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300">
-                    View API docs
+                <p class="text-gray-600 dark:text-gray-400 mb-4">{{ __('Explore') }} {{ strtolower($card['title']) }} {{ __('documentation') }}.</p>
+                <a href="{{ \Xoshbin\Pertuk\Support\PertukUrl::doc($card['slug'], locale: app()->getLocale(), version: $current_version ?? null) }}" class="inline-flex items-center gap-2 {{ $theme['text'] }} font-medium">
+                    {{ __('Read docs') }}
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
                 </a>
             </div>
-
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6 border border-green-200 dark:border-green-800">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500 text-white">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Examples</h3>
-                </div>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Real-world examples and use cases.</p>
-                <a href="{{ \Xoshbin\Pertuk\Support\PertukUrl::doc('examples', locale: app()->getLocale(), version: $current_version ?? null) }}" class="inline-flex items-center gap-2 text-green-600 dark:text-green-400 font-medium hover:text-green-700 dark:hover:text-green-300">
-                    Browse examples
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
+            @endforeach
         </div>
+        @endif
 
         <!-- Documentation Sections (Context Grid) -->
         <div class="mb-16">

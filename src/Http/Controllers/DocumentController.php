@@ -86,9 +86,20 @@ class DocumentController extends Controller
             return count($parts) > 1 ? $parts[0] : 'Getting Started';
         });
 
+        // Build featured cards from the first 3 groups
+        $featuredCards = $groupedItems->take(3)->map(function ($groupItems, $groupKey) {
+            $first = $groupItems->first();
+
+            return [
+                'title' => str_replace('-', ' ', ucfirst($groupKey)),
+                'slug'  => $first['slug'],
+            ];
+        })->values();
+
         return View::make('pertuk::index', [
             'items' => $items, // Plain list for sidebar
             'groupedItems' => $groupedItems, // Grouped for main content
+            'featuredCards' => $featuredCards,
             'current_version' => $docs->getVersion(),
         ]);
     }

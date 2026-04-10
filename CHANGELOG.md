@@ -2,9 +2,23 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v1.0.0 - 2026-04-10
+
+### What's Changed
+
+* Bump actions/checkout from 5 to 6 by @dependabot[bot] in https://github.com/Xoshbin/pertuk/pull/3
+* chore(deps): bump ramsey/composer-install from 3 to 4 by @dependabot[bot] in https://github.com/Xoshbin/pertuk/pull/13
+* chore(deps): bump dependabot/fetch-metadata from 2.5.0 to 3.0.0 by @dependabot[bot] in https://github.com/Xoshbin/pertuk/pull/14
+* Feat/github-docs-source by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/19
+* feat: add root locale support for flat doc layouts (VitePress/Starlight style) by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/20
+* Docs/changelog and test fixes by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/21
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/v0.1.6...v1.0.0
+
 ## [Unreleased]
 
 ### Added
+
 - **Root locale (flat) support — VitePress/Starlight style.** One locale can now be designated `root` in the `locales` config. Its files live directly at the docs root with no subdirectory or URL prefix. Secondary locales keep their `/{code}/` URL prefix. See README for directory layout examples.
 - **`Xoshbin\Pertuk\Support\LocaleConfig`** — centralised accessor for all locale config. Replaces scattered `config('pertuk.supported_locales')`, `config('pertuk.rtl_locales')`, etc. calls throughout views and services.
 - **`Xoshbin\Pertuk\Support\PathResolver`** — single resolution point that parses any incoming URL path into `[locale, version, slug]` using the Starlight routing algorithm (root locale = path not starting with a secondary locale prefix).
@@ -14,6 +28,7 @@ All notable changes to `:package_name` will be documented in this file.
 - New `Xoshbin\Pertuk\Services\Source\SourceDriver` interface with `LocalSource` (default) and `GitHubSource` implementations. Registered as a singleton in the container.
 
 ### Changed
+
 - **`locales` config key replaces the old locale keys** (see Breaking Changes).
 - Routing simplified to a single catch-all route `/{path?}` delegating to `PathResolver`. Explicit per-locale/per-version routes removed.
 - `DocumentationService::getFiles()` now correctly excludes secondary locale subdirectories from root locale listings, and vice versa.
@@ -22,12 +37,15 @@ All notable changes to `:package_name` will be documented in this file.
 - `php artisan pertuk:build` now calls `SourceDriver::warmAll()` before pre-rendering — a no-op for the local driver, a full tree sync for the GitHub driver.
 
 ### Removed
+
 - `Xoshbin\Pertuk\Services\Source\ScansVersions` trait — replaced by the explicit `versions` config array.
 
 ### Deprecated
+
 - The top-level `pertuk.root` config key. Use `pertuk.sources.local.root` instead. The legacy key continues to work as a fallback and will be removed in a future major release.
 
 ### Breaking Changes
+
 - **`locales` map replaces four separate config keys.** Replace:
   ```php
   // Before
@@ -35,12 +53,13 @@ All notable changes to `:package_name` will be documented in this file.
   'default_locale'    => 'en',
   'rtl_locales'       => ['ar'],
   'locale_labels'     => ['en' => 'English', 'ar' => 'العربية'],
-
+  
   // After (classic prefix mode — no file moves required)
   'locales' => [
       'en' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
       'ar' => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
   ],
+  
   ```
   To enable root locale (flat layout), use the `root` key instead of a locale code for the primary language:
   ```php
@@ -48,6 +67,7 @@ All notable changes to `:package_name` will be documented in this file.
       'root' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
       'ar'   => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
   ],
+  
   ```
 - **`exclude_versions` config key removed.** Replace with an explicit `versions` array listing only the versions you want to expose.
 - **Published views** using `route('pertuk.docs.show', ['locale' => ..., 'slug' => ...])` must be updated to use `\Xoshbin\Pertuk\Support\PertukUrl::doc($slug)`. Re-publish with `php artisan vendor:publish --tag="pertuk-views" --force` or update manually.

@@ -31,8 +31,8 @@ class ShikiFencedCodeRenderer implements NodeRendererInterface
 
     public function __construct(ShikiHighlighter $highlighter)
     {
-        $this->highlighter   = $highlighter;
-        $this->baseRenderer  = new BaseFencedCodeRenderer();
+        $this->highlighter = $highlighter;
+        $this->baseRenderer = new BaseFencedCodeRenderer;
     }
 
     public function render(Node $node, ChildNodeRendererInterface $childRenderer): string

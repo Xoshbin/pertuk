@@ -2,6 +2,14 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v1.0.1 - 2026-04-10
+
+### What's Changed
+
+* Feat/dynamic homepage cards by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/22
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/v1.0.0...v1.0.1
+
 ## v1.0.0 - 2026-04-10
 
 ### What's Changed
@@ -60,6 +68,7 @@ All notable changes to `:package_name` will be documented in this file.
       'ar' => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
   ],
   
+  
   ```
   To enable root locale (flat layout), use the `root` key instead of a locale code for the primary language:
   ```php
@@ -67,6 +76,7 @@ All notable changes to `:package_name` will be documented in this file.
       'root' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
       'ar'   => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
   ],
+  
   
   ```
 - **`exclude_versions` config key removed.** Replace with an explicit `versions` array listing only the versions you want to expose.

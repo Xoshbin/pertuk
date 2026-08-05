@@ -2,6 +2,15 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v1.0.3 - 2026-08-05
+
+### What's Changed
+
+* chore(deps): bump dependabot/fetch-metadata from 3.0.0 to 3.1.0 by @dependabot[bot] in https://github.com/Xoshbin/pertuk/pull/24
+* Fix/GitHub source prune removed files by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/26
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/v1.0.2...v1.0.3
+
 ## v1.0.2 - 2026-04-10
 
 ### What's Changed
@@ -78,6 +87,7 @@ All notable changes to `:package_name` will be documented in this file.
   
   
   
+  
   ```
   To enable root locale (flat layout), use the `root` key instead of a locale code for the primary language:
   ```php
@@ -85,6 +95,7 @@ All notable changes to `:package_name` will be documented in this file.
       'root' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
       'ar'   => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
   ],
+  
   
   
   

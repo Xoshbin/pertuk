@@ -14,6 +14,27 @@ it('renders the docs index with at least one document', function () {
     $response->assertSee('Payments', false);
 });
 
+it('does not describe the consuming app as an accounting system by default', function () {
+    $this->createTestMarkdownFile('payments.md', "---\ntitle: Payments\norder: 1\n---\n\n# Payments\n\nThis is a guide about payments.");
+
+    $response = $this->get('/docs');
+
+    $response->assertOk();
+    $response->assertDontSee('Laravel-based accounting system', false);
+    $response->assertSee('<meta name="description" content="', false);
+});
+
+it('uses the configured tagline for the hero text and meta description', function () {
+    config(['pertuk.tagline' => 'A fast, open-source launcher for macOS, Windows, and Linux.']);
+    $this->createTestMarkdownFile('payments.md', "---\ntitle: Payments\norder: 1\n---\n\n# Payments\n\nThis is a guide about payments.");
+
+    $response = $this->get('/docs');
+
+    $response->assertOk();
+    $response->assertSee('A fast, open-source launcher for macOS, Windows, and Linux.', false);
+    $response->assertSee('<meta name="description" content="A fast, open-source launcher for macOS, Windows, and Linux.">', false);
+});
+
 it('gets available versions', function () {
     // Set up versions in config
     config(['pertuk.versions' => ['v2.0', 'v1.0']]);

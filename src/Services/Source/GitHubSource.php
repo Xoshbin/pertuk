@@ -76,6 +76,8 @@ class GitHubSource implements SourceDriver
             $files[$relative] = $sha;
         }
 
+        $this->pruneRemoved(array_keys($previous['files']), array_keys($files));
+
         $manifest = [
             'tree_sha' => $tree['sha'],
             'synced_at' => now()->toIso8601String(),
@@ -83,6 +85,39 @@ class GitHubSource implements SourceDriver
         ];
 
         File::put($this->cachePath.'/.manifest.json', json_encode($manifest, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Delete cached files that were present in the previous manifest but are
+     * no longer in the freshly-fetched tree — otherwise files removed
+     * upstream (renamed, deleted) stay orphaned on disk indefinitely, since
+     * the sync loop above only ever adds or updates blobs.
+     *
+     * @param  array<int, string>  $previousRelativePaths
+     * @param  array<int, string>  $currentRelativePaths
+     */
+    protected function pruneRemoved(array $previousRelativePaths, array $currentRelativePaths): void
+    {
+        $removed = array_diff($previousRelativePaths, $currentRelativePaths);
+
+        foreach ($removed as $relative) {
+            $absolute = $this->cachePath.DIRECTORY_SEPARATOR.ltrim($relative, '/');
+            if (File::exists($absolute)) {
+                File::delete($absolute);
+            }
+        }
+
+        // Clean up any directories left empty by the deletions above.
+        foreach ($removed as $relative) {
+            $dir = dirname($this->cachePath.DIRECTORY_SEPARATOR.ltrim($relative, '/'));
+            while (str_starts_with($dir, $this->cachePath) && $dir !== rtrim($this->cachePath, DIRECTORY_SEPARATOR)) {
+                if (! File::isDirectory($dir) || File::allFiles($dir) !== [] || File::directories($dir) !== []) {
+                    break;
+                }
+                File::deleteDirectory($dir);
+                $dir = dirname($dir);
+            }
+        }
     }
 
     /**

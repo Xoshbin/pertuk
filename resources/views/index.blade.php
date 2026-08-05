@@ -10,7 +10,7 @@
                 {{ config('app.name') }} Documentation
             </h1>
             <p class="text-xl text-gray-600 dark:text-gray-400 max-w-3xl">
-                Comprehensive documentation for {{ config('app.name') }}, a modern Laravel-based accounting system with double-entry bookkeeping, multi-currency support, and advanced financial management features.
+                {{ config('pertuk.tagline') ?: __('Comprehensive documentation for :app.', ['app' => config('app.name')]) }}
             </p>
         </div>
 

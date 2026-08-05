@@ -1,6 +1,11 @@
 <?php
 
 return [
+    // Short tagline shown on the docs index hero and used as the page <meta
+    // name="description">. Each consuming app should override this — the
+    // package default stays product-agnostic on purpose.
+    'tagline' => env('PERTUK_TAGLINE'), // @phpstan-ignore-line
+
     // Root folder for documentation files. Designed to be multi-lingual in future.
     // Place markdown files directly under docs/ (e.g., docs/payments.md) or under
     // per-locale folders (e.g., docs/en/payments.md, docs/ar/payments.md).

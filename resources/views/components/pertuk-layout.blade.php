@@ -15,8 +15,10 @@
     @php
         $theme = config('pertuk.theme', 'system');
         $initialDark = $theme === 'dark';
+        $description = config('pertuk.tagline') ?: __('Comprehensive documentation for :app.', ['app' => config('app.name')]);
     @endphp
     <title>{{ $title ? $title . ' · ' . config('app.name') : __('Docs') . ' · ' . config('app.name') }}</title>
+    <meta name="description" content="{{ $description }}">
     
     <script>
         (function() {

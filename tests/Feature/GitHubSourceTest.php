@@ -168,6 +168,86 @@ it('warmAll re-downloads only blobs whose sha changed', function () {
     });
 });
 
+it('warmAll deletes cached files that were removed upstream', function () {
+    $first = [
+        'sha' => 'tree-1',
+        'tree' => [
+            ['path' => 'docs/intro.md', 'type' => 'blob', 'sha' => 'sha-intro'],
+            ['path' => 'docs/plans/old-plan.md', 'type' => 'blob', 'sha' => 'sha-plan'],
+        ],
+        'truncated' => false,
+    ];
+
+    Http::fake([
+        'api.github.com/*' => Http::response($first, 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/intro.md' => Http::response('# Intro', 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/plans/old-plan.md' => Http::response('# Old plan', 200),
+    ]);
+
+    $source = new GitHubSource(
+        client: new GitHubClient('acme/docs', 'main', token: null),
+        repo: 'acme/docs',
+        branch: 'main',
+        path: 'docs',
+        cachePath: $this->ghCachePath,
+    );
+
+    $source->warmAll();
+
+    expect(File::exists($this->ghCachePath.'/plans/old-plan.md'))->toBeTrue();
+
+    // Upstream deleted docs/plans/old-plan.md.
+    $second = [
+        'sha' => 'tree-2',
+        'tree' => [
+            ['path' => 'docs/intro.md', 'type' => 'blob', 'sha' => 'sha-intro'],
+        ],
+        'truncated' => false,
+    ];
+
+    Http::swap(new HttpFactory);
+    Http::fake([
+        'api.github.com/*' => Http::response($second, 200),
+    ]);
+
+    $source->warmAll();
+
+    expect(File::exists($this->ghCachePath.'/plans/old-plan.md'))->toBeFalse();
+    expect(File::exists($this->ghCachePath.'/plans'))->toBeFalse();
+    expect(File::get($this->ghCachePath.'/intro.md'))->toBe('# Intro');
+
+    $manifest = json_decode(File::get($this->ghCachePath.'/.manifest.json'), true);
+    expect($manifest['files'])->not->toHaveKey('plans/old-plan.md');
+});
+
+it('warmAll does not delete the manifest file itself while pruning', function () {
+    $treePayload = [
+        'sha' => 'tree-1',
+        'tree' => [
+            ['path' => 'docs/intro.md', 'type' => 'blob', 'sha' => 'sha-intro'],
+        ],
+        'truncated' => false,
+    ];
+
+    Http::fake([
+        'api.github.com/*' => Http::response($treePayload, 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/intro.md' => Http::response('# Intro', 200),
+    ]);
+
+    $source = new GitHubSource(
+        client: new GitHubClient('acme/docs', 'main', token: null),
+        repo: 'acme/docs',
+        branch: 'main',
+        path: 'docs',
+        cachePath: $this->ghCachePath,
+    );
+
+    $source->warmAll();
+    $source->warmAll();
+
+    expect(File::exists($this->ghCachePath.'/.manifest.json'))->toBeTrue();
+});
+
 it('ensureFile is a no-op when the file already exists locally', function () {
     File::put($this->ghCachePath.'/intro.md', '# Cached');
 

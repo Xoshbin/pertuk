@@ -2,6 +2,15 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v1.0.4 - 2026-08-05
+
+### What's Changed
+
+* chore(deps): bump actions/checkout from 6 to 7 by @dependabot[bot] in https://github.com/Xoshbin/pertuk/pull/25
+* fix: prune cache from disk state, not the previous manifest by @Xoshbin in https://github.com/Xoshbin/pertuk/pull/27
+
+**Full Changelog**: https://github.com/Xoshbin/pertuk/compare/v1.0.3...v1.0.4
+
 ## v1.0.3 - 2026-08-05
 
 ### What's Changed
@@ -88,6 +97,7 @@ All notable changes to `:package_name` will be documented in this file.
   
   
   
+  
   ```
   To enable root locale (flat layout), use the `root` key instead of a locale code for the primary language:
   ```php
@@ -95,6 +105,7 @@ All notable changes to `:package_name` will be documented in this file.
       'root' => ['label' => 'English', 'lang' => 'en', 'dir' => 'ltr'],
       'ar'   => ['label' => 'العربية', 'lang' => 'ar', 'dir' => 'rtl'],
   ],
+  
   
   
   

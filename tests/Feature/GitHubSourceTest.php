@@ -220,6 +220,45 @@ it('warmAll deletes cached files that were removed upstream', function () {
     expect($manifest['files'])->not->toHaveKey('plans/old-plan.md');
 });
 
+it('warmAll deletes stray on-disk files that the manifest never recorded as removed', function () {
+    // Simulates the real incident: an older, buggy warmAll() wrote a manifest
+    // that already excluded the removed blob (it only ever recorded files
+    // found in the current tree) while leaving the stale file on disk. A
+    // single subsequent warmAll() run must self-heal from disk state alone —
+    // it cannot rely on the previous manifest ever having mentioned the file.
+    File::ensureDirectoryExists($this->ghCachePath.'/plans');
+    File::put($this->ghCachePath.'/plans/old-plan.md', '# Stale, orphaned before this fix existed');
+    File::put($this->ghCachePath.'/.manifest.json', json_encode([
+        'tree_sha' => 'tree-0',
+        'synced_at' => now()->toIso8601String(),
+        'files' => ['intro.md' => 'sha-intro'], // never listed the orphan
+    ]));
+
+    Http::fake([
+        'api.github.com/*' => Http::response([
+            'sha' => 'tree-1',
+            'tree' => [
+                ['path' => 'docs/intro.md', 'type' => 'blob', 'sha' => 'sha-intro'],
+            ],
+            'truncated' => false,
+        ], 200),
+        'raw.githubusercontent.com/acme/docs/main/docs/intro.md' => Http::response('# Intro', 200),
+    ]);
+
+    $source = new GitHubSource(
+        client: new GitHubClient('acme/docs', 'main', token: null),
+        repo: 'acme/docs',
+        branch: 'main',
+        path: 'docs',
+        cachePath: $this->ghCachePath,
+    );
+
+    $source->warmAll();
+
+    expect(File::exists($this->ghCachePath.'/plans/old-plan.md'))->toBeFalse();
+    expect(File::exists($this->ghCachePath.'/plans'))->toBeFalse();
+});
+
 it('warmAll does not delete the manifest file itself while pruning', function () {
     $treePayload = [
         'sha' => 'tree-1',

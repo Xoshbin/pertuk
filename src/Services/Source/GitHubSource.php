@@ -76,7 +76,7 @@ class GitHubSource implements SourceDriver
             $files[$relative] = $sha;
         }
 
-        $this->pruneRemoved(array_keys($previous['files']), array_keys($files));
+        $this->pruneRemoved(array_keys($files));
 
         $manifest = [
             'tree_sha' => $tree['sha'],
@@ -88,34 +88,42 @@ class GitHubSource implements SourceDriver
     }
 
     /**
-     * Delete cached files that were present in the previous manifest but are
-     * no longer in the freshly-fetched tree — otherwise files removed
-     * upstream (renamed, deleted) stay orphaned on disk indefinitely, since
-     * the sync loop above only ever adds or updates blobs.
+     * Delete cached files that are no longer in the freshly-fetched tree.
+     * Walks the cache directory itself rather than diffing against the
+     * previous manifest: the manifest is always overwritten with exactly
+     * the current tree's files, so a file dropped upstream disappears from
+     * the manifest the moment it disappears from the tree — one sync later
+     * there's no history left to diff against, only the stale file sitting
+     * on disk. Disk state is the only reliable source of truth here.
      *
-     * @param  array<int, string>  $previousRelativePaths
      * @param  array<int, string>  $currentRelativePaths
      */
-    protected function pruneRemoved(array $previousRelativePaths, array $currentRelativePaths): void
+    protected function pruneRemoved(array $currentRelativePaths): void
     {
-        $removed = array_diff($previousRelativePaths, $currentRelativePaths);
+        $keep = array_flip($currentRelativePaths);
+        $emptiedDirs = [];
 
-        foreach ($removed as $relative) {
-            $absolute = $this->cachePath.DIRECTORY_SEPARATOR.ltrim($relative, '/');
-            if (File::exists($absolute)) {
-                File::delete($absolute);
+        // File::allFiles() ignores dotfiles by default, which conveniently
+        // skips .manifest.json without needing an explicit exclusion.
+        foreach (File::allFiles($this->cachePath) as $file) {
+            $relative = str_replace(DIRECTORY_SEPARATOR, '/', $file->getRelativePathname());
+
+            if (isset($keep[$relative])) {
+                continue;
             }
+
+            File::delete($file->getPathname());
+            $emptiedDirs[] = \dirname($file->getPathname());
         }
 
         // Clean up any directories left empty by the deletions above.
-        foreach ($removed as $relative) {
-            $dir = dirname($this->cachePath.DIRECTORY_SEPARATOR.ltrim($relative, '/'));
+        foreach (array_unique($emptiedDirs) as $dir) {
             while (str_starts_with($dir, $this->cachePath) && $dir !== rtrim($this->cachePath, DIRECTORY_SEPARATOR)) {
                 if (! File::isDirectory($dir) || File::allFiles($dir) !== [] || File::directories($dir) !== []) {
                     break;
                 }
                 File::deleteDirectory($dir);
-                $dir = dirname($dir);
+                $dir = \dirname($dir);
             }
         }
     }
